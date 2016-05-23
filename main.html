@@ -157,7 +157,7 @@
 				$.ajax({
 					url:"ajax.php",
 					dataType:"json",
-					//type:"post",
+					type:"get",
 					async:false,
 					data:{get_location:1, location_id:id},
 					success:function(result)
@@ -187,7 +187,7 @@
 					$.ajax({
 					url:"ajax.php",
 					dataType:"json",
-					//type:"post",
+					type:"get",
 					async:false,
 					data:{get_npc:1, npc_id:npc_id},
 					success:function(result)
@@ -452,7 +452,7 @@
 						/*$.ajax({
 							url:"location.json",
 							dataType:"json",
-							//type:"post",
+							type:"get",
 							success:function()
 							{
 								
@@ -576,7 +576,7 @@
 				/*$.ajax({
 					url:"ajax.php",
 					dataType:"json",
-					//type:"post",
+					type:"get",
 					async:false,
 					data:{"chk_haschar":1, "log_id":<?=$log_id?>},
 					success:function(result)
@@ -630,7 +630,7 @@
 				$.ajax({
 					url:"ajax.php",
 					dataType:"json",
-					//type:"post",
+					type:"get",
 					data:{"save":1, "save_data":save_data},
 					success:function(result)
 					{
@@ -644,7 +644,7 @@
 				$.ajax({
 					url:"ajax.php",
 					dataType:"json",
-					//type:"post",
+					type:"get",
 					async:false,
 					data:{"load":1},
 					success:function(result)
