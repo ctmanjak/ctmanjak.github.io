@@ -35,6 +35,7 @@ var Npc = function()
 	var exp_gain;
 	var gold;
 	var personality;
+	var id;
 
 	Character.call(this);
 }
