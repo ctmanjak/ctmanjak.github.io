@@ -71,7 +71,7 @@ Player.prototype.createPlayer = function()
 	$.ajax({
 		url:"exp_table.json",
 		dataType:"json",
-		type:"post",
+		type:"get",
 		context:this,
 		async:false,
 		success:function(result)
