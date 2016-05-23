@@ -123,7 +123,7 @@ Player.prototype.gainExp = function(exp, stat)
 	$.ajax({
 		url:"exp_table.json",
 		dataType:"json",
-		type:"post",
+		type:"get",
 		context:this,
 		success:function(result)
 		{
@@ -144,7 +144,7 @@ Player.prototype.moveLocation = function(id)
 	$.ajax({
 		url:"location.json",
 		dataType:"json",
-		type:"post",
+		type:"get",
 		context:this,
 		async:false,
 		success:function(result)
@@ -166,7 +166,7 @@ Npc.prototype.createRandom = function(npc)
 	url:"defname.json",
 	async:false,
 	dataType:"json",
-	type:"post",
+	type:"get",
 	context:this,
 	success:function(result)
 	{
@@ -252,7 +252,7 @@ Monster.prototype.createRandom = function(level)
 	url:"defname.json",
 	async:false,
 	dataType:"json",
-	type:"post",
+	type:"get",
 	context:this,
 	success:function(result)
 	{
