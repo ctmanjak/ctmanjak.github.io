@@ -155,32 +155,30 @@
 			{
 				var npc_id = [];
 				$.ajax({
-					url:"ajax.php",
+					url:"location.json",
 					dataType:"json",
 					type:"get",
 					async:false,
-					data:{get_location:1, location_id:id},
 					success:function(result)
 					{
-						if(result['result'] == true)
+						var location = JSON.stringify(result);
+						location = location[id];
+						var location_effects = location['location_effect'];
+						for(var i = 0; i < location_effects.length; i++)
 						{
-							var location_effects = result['location']['location_effect'];
-							for(var i = 0; i < location_effects.length; i++)
+							if(location_effects[i]['id'] != 0)
 							{
-								if(location_effects[i]['id'] != 0)
+								for(var j = 0; j < followers.length; j++)
 								{
-									for(var j = 0; j < followers.length; j++)
-									{
-										addMagicEffect(followers[j], location_effects[i]);
-									}
-									addMagicEffect(player, location_effects[i]);
+									addMagicEffect(followers[j], location_effects[i]);
 								}
+								addMagicEffect(player, location_effects[i]);
 							}
-							cur_location = result['location'];
-							for(var val in result['location']['encounter_id'])
-							{
-								npc_id.push(result['location']['encounter_id'][val]);
-							}
+						}
+						cur_location = location;
+						for(var val in location['encounter_id'])
+						{
+							npc_id.push(location['encounter_id'][val]);
 						}
 					}
 				});
