@@ -153,6 +153,7 @@
 			var cur_state = state['idle'];
 			var moveLocation = function(id)
 			{
+				console.log(1);
 				var npc_id = [];
 				$.ajax({
 					url:"location.json",
@@ -161,6 +162,7 @@
 					async:false,
 					success:function(result)
 					{
+						console.log(2);
 						var location = JSON.stringify(result);
 						location = location[id];
 						var location_effects = location['location_effect'];
