@@ -1,0 +1,98 @@
+[캐릭터 정보]
+HP, MP, 공격력, 공격속도, 레벨, 힘, 민첩, 지능, 인내, 방어력, 마법저항력, 상태이상
+	ㄴ[플레이어 정보] = 저장할 데이터
+	경험치, 스탯포인트, 운반무게, 착용무게, 현재위치, 현재상태, 돈, 슬롯
+	ㄴ[NPC 정보]
+	이름, 타입(사람, 괴물 등), 성향(적대, 중립, 우호)
+
+[현재상태 정보] - 순서대로 숫자매김
+정지, 인카운터, 전투
+
+[시스템 정보]
+퀘스트, 전투, 대화, 거래
+
+[퀘스트 정보]
+조건, 제목, 내용, 보상
+[아이템 정보]
+id, 슬롯, 이름, 설명, 가격, 무게, 인챈트
+	ㄴ[무기 정보]
+	공격력, 사거리(근거리, 원거리)
+	ㄴ[방어구 정보]
+	방어력
+
+[인챈트 정보]
+레벨, 효과
+
+[위치 정보]
+id, 장소타입(마을, 던전 등), 레벨대, 장소효과(상태이상 등)
+
+[상태이상 정보] - 순서대로 숫자매김(2의 거듭제곱으로)
+기절(시간), 침묵(시간), 속박(시간), 투명(시간), 출혈(시간, 피해), 면역(효과(물리|마법), 시간), 약화(스탯, 강도, 시간), 강화(스탯, 강도, 시간)
+
+--------------게임 시스템--------------
+힘이 오르면 운반무게와 물리공격력이 오른다.
+힘 1 = 공격력+1, 운반무게+1;
+민첩이 오르면 공격속도와 이동속도가 오른다.
+민첩 1 = 공격속도+1, 이동속도+1;
+지능이 오르면 마법공격력과 마나가 오르고 캐스팅시간이 줄어든다.
+지능 1 = 마법공격력+1, 마나+1, 캐스팅시간-1%;
+인내가 오르면 체력이 오른다.
+인내 1 = 체력+2;
+마법을 사용할 때는 캐스팅시간이 있다.(캐스팅시간*(1-지능*0.01))
+지능이 10 이하이면 인카운터 즉시 전투
+공격속도 계산해서 시간마다 공격
+--------------장소--------------
+0:시작필드, 1:시작타운
+
+--------------도타2 공격속도 계산--------------
+Attacks per second = (100 + IAS) × 0.01 / BAT
+Attack time = BAT / [(100 + IAS) × 0.01] = 1 / (attacks per second) 도타2 공격속도 계산
+--------------------------------------------------
+--------------롤 방어력 계산--------------
+Damage multiplier = 100/(100+Armor) if Armor >= 0
+							  2-100/(100-Armor) otherwise
+--------------------------------------------
+							  
+--------------와우 사냥경험치 계산--------------
+XP = (Char Level * 5) + 45, where Char Level = Mob Level, for mobs in Azeroth
+XP = (Char Level * 5) + 235, where Char Level = Mob Level, for mobs in Outland
+XP = (Char Level * 5) + 580, where Char Level = Mob Level, for mobs in Northrend
+XP = (Char Level * 5) + 1878, where Char Level = Mob Level, for mobs in Cataclysm
+
+XP = (Base XP) * (1 + 0.05 * (Mob Level - Char Level) ), where Mob Level > Char Level
+
+ZD =  5, when Char Level =  1 -  7
+ZD =  6, when Char Level =  8 -  9
+ZD =  7, when Char Level = 10 - 11
+ZD =  8, when Char Level = 12 - 15
+ZD =  9, when Char Level = 16 - 19
+ZD = 11, when Char Level = 20 - 29
+ZD = 12, when Char Level = 30 - 39
+ZD = 13, when Char Level = 40 - 44
+ZD = 14, when Char Level = 45 - 49
+ZD = 15, when Char Level = 50 - 54
+ZD = 16, when Char Level = 55 - 59
+ZD = 17, when Char Level = 60 - 79
+
+XP = (Base XP) * (1 - (Char Level - Mob Level)/ZD )
+   where Mob Level < Char Level, and Mob Level > Gray Level
+   
+Elite XP = 2 * XP
+
+1 person group = 1.0
+2 person group = 1.0 -> 1.15
+3 person group = 1.166 -> 1.3
+4 person group = 1.3 -> 1.45
+5 person group = 1.4 -> 1.6
+----------------------------------------------
+
+--------------적용할 것--------------
+아이템 추가
+마법공격력 추가
+npc 추가
+밸런스 맞추기
+
+--------------아무거나 생각나는거(적용할지는 모름)--------------
+회피 버튼 랜덤으로 나옴
+시간 추가(시간대에 따라 강해지는 캐릭터있음, ((이동시간+이속)*0.01)
+npc도 현재상태를 가짐
