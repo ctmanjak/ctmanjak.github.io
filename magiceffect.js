@@ -14,6 +14,14 @@ var addMagicEffect = function(target, effect)
 			if(effect['type'] == "physical") damage = Math.round(effect['amount'] * (100/(100+target.armor)));
 			else damage = Math.round(effect['amount'] * (100/(100+target.resist)));
 			target.hp-=damage;
+			if(target == player)
+			{
+				$(".front").addClass("ani_npc_attack");
+				setTimeout(function()
+				{
+					$(".front").removeClass("ani_npc_attack");
+				}, 300);
+			}
 			if(target.hp <= 0)
 			{
 				target.hp = 0;
@@ -86,6 +94,14 @@ var addMagicEffect = function(target, effect)
 			{
 				if(target.hp-damage < 0) target.hp=0;
 				else target.hp-=damage;
+				if(target == player)
+				{
+					$(".front").addClass("ani_npc_attack");
+					setTimeout(function()
+					{
+						$(".front").removeClass("ani_npc_attack");
+					}, 300);
+				}
 				$(".player_effect > ul > #"+effect_name+" #duration").html(target.magic_effect[effect_name]['duration']);
 				reload(target, 'hp');
 			}

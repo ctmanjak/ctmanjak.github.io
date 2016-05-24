@@ -21,7 +21,7 @@ a:active
 body
 {
 	font-family:Malgun Gothic;
-	/*overflow:hidden;*/
+	overflow:hidden;
 }
 /* startgame & frame*/
 .front
@@ -104,7 +104,7 @@ body
 .ani_player_attack
 {
 	animation-name:player_attack;
-	animation-duration:0.5s;
+	animation-duration:0.4s;
 	animation-timing-function:linear;
 }
 .ani_npc_attack
@@ -317,7 +317,7 @@ body
 {
 	position:absolute;
 	width:70%;
-	height:360px;
+	height:46%;
 	left:50%;
 	transform:translate(-50%, 0%);
 	border:1px solid;
@@ -347,6 +347,19 @@ body
 	padding:5px;
 	position:absolute;
 }
+/* location_progress */
+.location_progress
+{
+	position:absolute;
+	top:48%;
+	height:10%;
+	width:70%;
+	border:1px solid;
+	left:50%;
+	transform:translate(-50%, 0%);
+	background:rgba(0, 0, 0, 0.5);
+	text-align:center;
+}
 /* controlscreen */
 .user_control
 {
@@ -355,28 +368,30 @@ body
 	position:absolute;
 	margin:auto;
 	width:70%;
-	height:360px;
-	bottom:5%;
+	height:40%;
+	bottom:0;
 	left:50%;
 	transform:translate(-50%, 0%);
 	border:1px solid;
 }
-.category
+.control_category
 {
 	background:#fff;
 	position:relative;
-	height:42px;
+	height:40px;
 	white-space:nowrap;
 	overflow:hidden;
+	margin:0px;
+	padding:0px;
 }
-.category ul
+.control_category ul
 {
 	position:relative;
 	display:inline;
 	margin:0px;
 	padding:0px;
 }
-.category li
+.control_category li
 {
 	position:relative;
 	text-align:center;
@@ -390,13 +405,170 @@ body
 .controlscreen
 {
 	position:relative;
-	margin-top:-1px;
-	background:#e8e8e8;
-	height:85%;
 	padding:5px;
 }
 .controlbox
 {
+}
+/* etc */
+.location_list_frame
+{
+	
+}
+.location_list_window
+{
+	position:absolute;
+	top:50%;
+	left:50%;
+	transform:translate(-50%, -50%);
+	width:500;
+	height:400;
+	border:1px solid;
+	background:#fff;
+}
+.location_category
+{
+	
+}
+.location_category ul
+{
+	margin:0;
+	padding:0;
+	display:inline-block;
+}
+.location_category li
+{
+	margin:0;
+	padding:5;
+	list-style-type:none;
+	display:inline-block;
+	position:relative;
+	text-align:center;
+}
+.location_list ul
+{
+	margin:0;
+	padding:0;
+}
+.location_list li
+{
+	margin:0;
+	padding:0;
+	padding-left:10px;
+	list-style-type:none;
+	height:20%;
+	color:#fff;
+	text-shadow:-1px -1px 1px #000,-1px 1px 1px #000,1px -1px 1px #000,1px 1px 1px #000;
+	font-size:1.2em;
+}
+.inventory_item
+{
+	margin:0;
+	padding:0;
+	margin-right:5px;
+	list-style-type:none;
+	font-size:1.2em;
+	display:inline-block;
+	border:1px solid;
+	position:relative;
+	top:0px;
+	width:34px;
+	height:34px;
+	background:#838383;
+}
+.inventory_item ul
+{
+	margin:0;
+	padding:0;
+}
+.inventory_item li
+{
+	margin:0;
+	padding:0;
+	list-style-type:none;
+}
+.inventory_image
+{
+	width:34px;
+	height:34px;
+	overflow:hidden;
+}
+.inventory_image img
+{
+	width:100%;
+	height:auto;
+}
+.item_detail
+{
+	z-index:1;
+	pointer-events:none;
+	position:absolute;
+	display:inline-block;
+	border:1px solid;
+	width:150px;
+	height:200px;
+	background:#fafad2;
+}
+.item_header
+{
+	text-align:center;
+	margin-left:34px;
+}
+.item_name
+{
+}
+.item_slot
+{
+	position:absolute;
+	right:0px;
+	font-size:0.8em;
+	display:inline-block;
+}
+.item_content
+{
+	word-break:break-all;
+	font-size:0.8em;
+	display:inline-block;
+	position:absolute;
+	top:8px;
+	width:100%;
+	margin-top:34px;
+}
+.item_desc
+{
+	margin:0;
+	padding:0;
+	padding-top:2px;
+	padding-left:2px;
+	position:relative;
+	height:80px;
+}
+.item_effect
+{
+	padding-top:2px;
+	padding-left:2px;
+	position:relative;
+}
+.item_effect ul
+{
+	margin:0;
+	padding:0;
+	list-style-type:none;
+}
+.item_effect li
+{
+	list-style-type:none;
+}
+.h_line
+{
+	position:absolute;
+	width:100%;
+	background:#66cdaa;
+	height:1px;
+}
+.equiped
+{
+	background:#adff2f;
 }
 .active
 {
