@@ -71,8 +71,8 @@ var personality = {good:1, neutral:2, bad:3};
 var player;
 var followers = [];
 var npcs = [];
-var active_npc = {};
-var active_player = {};
+var active_unit = {};
+var active_unit = {};
 var npcs_info = [];
 var player_location = 1;
 var npc_all_dead = 0;
@@ -206,21 +206,21 @@ $('#attack').click(function(event)
 		setTimeout(function()
 		{
 			$('#attack').removeAttr("disabled");
-		}, active_player.bat/((100+active_player.as)*0.01)*1000);
+		}, active_unit.bat/((100+active_unit.as)*0.01)*1000);
 		adjustMagicEffect(damage_effect, {amount:player.ad, type:"physical"});
-		addMagicEffect(active_npc, {duration:1, effect:damage_effect});
+		addMagicEffect(active_unit, {duration:1, effect:[damage_effect]});
 		$(".frame").addClass("ani_player_attack");
 		setTimeout(function()
 		{
 			$(".frame").removeClass("ani_player_attack");
 		}, 400);
-		reload(active_npc, 'hp');
-		reloadList(active_npc);
-		if(active_npc.hp <= 0)
+		reload(active_unit, 'hp');
+		reloadList(active_unit);
+		if(active_unit.hp <= 0)
 		{
 			for(var i = 0; i < combat_npcs.length; i++)
 			{
-				if(combat_npcs[i] === active_npc)
+				if(combat_npcs[i] === active_unit)
 				{
 					if(i >= combat_npcs.length-1)
 					{
@@ -274,9 +274,9 @@ var combat_npc = function(id, enemy)
 	}
 	if(!(cur_state==state['dead']) && !(npcs[id].hp <= 0))
 	{
-		adjustMagicEffect(damage_effect, {duration:1, amount:npcs[id].ad, type:"physical"});
-		addMagicEffect(select_enemy, damage_effect);
-		if(select_enemy == active_player) reload(select_enemy, "hp");
+		adjustMagicEffect(damage_effect, {amount:npcs[id].ad, type:"physical"});
+		addMagicEffect(select_enemy, {duration:1, effect:[damage_effect]});
+		if(select_enemy == active_unit) reload(select_enemy, "hp");
 		reloadList(select_enemy);
 		setTimeout(combat_npc, npcs[id].bat/((100+npcs[id].as)*0.01)*1000, id, enemy);
 	}
@@ -308,9 +308,9 @@ var combat_follower = function(id, enemy)
 	}
 	if(!(cur_state==state['dead']) && !(followers[id].hp <= 0) && !(npc_all_dead == 1))
 	{
-		adjustMagicEffect(damage_effect, {duration:1, amount:followers[id].ad, type:"physical"});
-		addMagicEffect(select_enemy, damage_effect);
-		if(select_enemy == active_npc) reload(select_enemy, "hp");
+		adjustMagicEffect(damage_effect, {amount:followers[id].ad, type:"physical"});
+		addMagicEffect(select_enemy, {duration:1, effect:[damage_effect]});
+		if(select_enemy == active_unit) reload(select_enemy, "hp");
 		reloadList(select_enemy);
 		setTimeout(combat_follower, followers[id].bat/((100+followers[id].as)*0.01)*1000, id, enemy);
 	}
@@ -420,75 +420,77 @@ var createNpc = function(num)
 $('.inc_stat > input[type=button]').click(function(event)
 {
 	event.preventDefault();
-	var chg_str = active_player['base_str'];
-	var chg_agi = active_player['base_agi'];
-	var chg_int = active_player['base_int'];
-	var chg_end = active_player['base_end'];
+	var chg_str = active_unit['base_str'];
+	var chg_agi = active_unit['base_agi'];
+	var chg_int = active_unit['base_int'];
+	var chg_end = active_unit['base_end'];
 	var item_id = [];
-	for(var slot in active_player.equip_slot)
+	for(var slot in active_unit.equip_slot)
 	{
-		if(active_player.equip_slot[slot] != "none")
+		if(active_unit.equip_slot[slot] != "none")
 		{
-			item_id.push(active_player.equip_slot[slot]);
-			equipItem(active_player, active_player.equip_slot[slot]);
+			item_id.push(active_unit.equip_slot[slot]);
+			equipItem(active_unit, active_unit.equip_slot[slot]);
 		}
 	}
-	active_player["base_"+$(this).attr('id').split("_")[1]] += 1;
-	active_player[$(this).attr('id')] += 1;
-	active_player.sp--;
+	active_unit["base_"+$(this).attr('id').split("_")[1]] += 1;
+	active_unit[$(this).attr('id')] += 1;
+	active_unit.sp--;
 	if($(this).attr('id') == "stat_str")
 	{
-		active_player.base_ad += 1;
-		active_player.ad += 1;
-		active_player.carry_weight += 1;
-		reload(active_player, "ad");
-		reload(active_player, "carry_weight");
+		active_unit.base_ad += 1;
+		active_unit.ad += 1;
+		active_unit.carry_weight += 1;
+		reload(active_unit, "ad");
+		reload(active_unit, "carry_weight");
 	}
 	else if($(this).attr('id') == "stat_agi")
 	{
-		active_player.base_as += 1;
-		active_player.base_ms += 1;
-		active_player.as += 1;
-		active_player.ms += 1;
-		reload(active_player, "as");
-		reload(active_player, "ms");
+		active_unit.base_as += 1;
+		active_unit.base_ms += 1;
+		active_unit.as += 1;
+		active_unit.ms += 1;
+		reload(active_unit, "as");
+		reload(active_unit, "ms");
 	}
 	else if($(this).attr('id') == "stat_int")
 	{
-		active_player.base_mp += 1;
-		active_player.max_mp += 1;
-		reload(active_player, "max_mp");
+		active_unit.base_mp += 1;
+		active_unit.max_mp += 1;
+		reload(active_unit, "max_mp");
 	}
 	else
 	{
-		active_player.base_hp += 2;
-		active_player.max_hp += 2;
-		reload(active_player, "max_hp");
+		active_unit.base_hp += 2;
+		active_unit.max_hp += 2;
+		reload(active_unit, "max_hp");
 	}
-	if(active_player.sp <= 0) $('.inc_stat').addClass("hide");
-	reload(active_player, $(this).attr('id'));
-	reload(active_player, "sp");
+	if(active_unit.sp <= 0) $('.inc_stat').addClass("hide");
+	reload(active_unit, $(this).attr('id'));
+	reload(active_unit, "sp");
 	for(var i = 0; i < item_id.length; i++)
 	{
-		equipItem(active_player, item_id[i]);
+		equipItem(active_unit, item_id[i]);
 	}
 });
 $('body').on('click', '.select_npc', function(event)
 {
 	event.preventDefault();
+	$('.select_player').removeClass("active");
 	$('.select_npc').removeClass("active");
 	$(this).addClass("active");
-	active_npc = npcs[$("li", this).attr("id").split("_")[1]];
-	reload(active_npc);
+	active_unit = npcs[$("li", this).attr("id").split("_")[1]];
+	reload(active_unit);
 });
 $('body').on('click', '.select_player', function(event)
 {
 	event.preventDefault();
 	$('.select_player').removeClass("active");
+	$('.select_npc').removeClass("active");
 	$(this).addClass("active");
-	if($(this).attr("id") == "player") active_player = player;
-	else active_player = followers[$("li", this).attr("id").split("_")[1]];
-	reload(active_player);
+	if($(this).attr("id") == "player") active_unit = player;
+	else active_unit = followers[$("li", this).attr("id").split("_")[1]];
+	reload(active_unit);
 });
 $('#save').click(function(event)
 {
@@ -575,7 +577,7 @@ $('#load').click(function(event)
 	}
 	$(".select_player")[0].click();
 	if(npcs.length > 0) $(".select_npc")[0].click();
-	reloadInventory(active_player);
+	reloadInventory(active_unit);
 });
 $('#explore').click(function(event)
 {
@@ -604,7 +606,7 @@ $('#explore').click(function(event)
 				var pos_x =parseInt(bg_pos[0])-500;
 				$('#movebg').html("@keyframes movebg{0%{background-position:"+bg_pos[0]+"px}100%{background-position:"+pos_x+"px;}}");
 			}
-			var encounter_chance = Math.floor(Math.random()*10+1);
+			var encounter_chance = Math.floor(Math.random()*3+1);
 			npcs = [];
 			$('.npc_list > ul').empty();
 			if(encounter_chance == 1)
@@ -626,7 +628,7 @@ $('#explore').click(function(event)
 				cur_state = state['encounter'];
 			}
 			else cur_state = state['idle'];
-		}, Math.floor(Math.random()*4000+1000));
+		}, Math.floor(Math.random()*4+1));
 	}
 });
 $("#main_location").click(function(event)
@@ -657,16 +659,13 @@ var moveLocation = function(id)
 		{
 			location = result[id];
 			var location_effects = location['location_effect'];
-			for(var i = 0; i < location_effects.length; i++)
+			if(location_effects[0]['id'] != 0)
 			{
-				if(location_effects[i]['id'] != 0)
+				for(var j = 0; j < followers.length; j++)
 				{
-					for(var j = 0; j < followers.length; j++)
-					{
-						addMagicEffect(followers[j], location_effects[i]);
-					}
-					addMagicEffect(player, location_effects[i]);
+					addMagicEffect(followers[j], {duration:"passive", effect:location_effects});
 				}
+				addMagicEffect(player, {duration:"passive", effect:location_effects});
 			}
 			cur_location = location['id'];
 			for(var i = 0; i < sub_locations.length; i++)
@@ -739,7 +738,8 @@ var addMagicEffect = function(target, effect)
 		}
 		//target.magic_effect[effect_name]['name'] = effect_name;
 	}
-	if(effect['name'].split("_")[0] == "equip")
+	if(effect['name'] === undefined) effect['name'] = "";
+	if(effect['duration'] == "passive")
 	{
 		$(".player_effect > ul#passive").append("<li id='"+effect_name+"'>"+effect['effect'][0]['name']+"<div class='effect_detail hide'><div class='effect_intensity'></div></div></li>");
 	}
@@ -890,7 +890,7 @@ var addMagicEffect = function(target, effect)
 				target[target.magic_effect[effect_name][a]['type']] += (parseInt(target.magic_effect[effect_name][a]['intensity'])*0.01)*target["base_"+target.magic_effect[effect_name][a]['type']];
 			}
 			reload(target, target.magic_effect[effect_name][a]['type']);
-			if(effect['effect'][a]['duration'] != "passive")
+			if(effect['duration'] != "passive")
 			{
 				const i = a;
 				target.magic_effect[effect_name][a]['cycle'] = setInterval(function()
@@ -931,12 +931,13 @@ var addMagicEffect = function(target, effect)
 			}
 			if(target[target.magic_effect[effect_name][a]['type']] < 0) target[target.magic_effect[effect_name][a]['type']] = 0;
 			reload(target, target.magic_effect[effect_name][a]['type']);
-			if(effect['effect'][a]['duration'] != "passive")
+			if(effect['duration'] != "passive")
 			{
 				const i = a;
 				target.magic_effect[effect_name][i]['cycle'] = setInterval(function()
 				{
-					if(--target.magic_effect[effect_name]['duration'] <= 0)
+					if(i == target.magic_effect[effect_name].length-1) target.magic_effect[effect_name]['duration']--;
+					if(target.magic_effect[effect_name]['duration'] <= 0)
 					{
 						clearInterval(target.magic_effect[effect_name][i]['cycle']);
 						if(target.magic_effect[effect_name][i]['intensity_type'] == "value")
@@ -964,7 +965,7 @@ var delMagicEffect = function(target, effect_id)
 {
 	for(var effect in target.magic_effect)
 	{
-		if(effect== effect_id)
+		if(effect == effect_id)
 		{
 			for(var i = 0; i < target.magic_effect[effect].length; i++)
 			{
@@ -991,6 +992,7 @@ var delMagicEffect = function(target, effect_id)
 						target[target.magic_effect[effect][i]['type']] += (parseInt(target.magic_effect[effect][i]['intensity'])*0.01)*target["base_"+target.magic_effect[effect][i]['type']];
 					}
 				}
+				reload(target, target.magic_effect[effect][i]['type']);
 			}
 			delete target.magic_effect[effect];
 			$(".player_effect > ul li#"+effect_id).remove();
@@ -1108,7 +1110,7 @@ Player.prototype.createPlayer = function()
 	this.max_mp = this.mp;
 	this.equip_slot = {head:"none", u_body:"none", l_body:"none", a_hands:"none", foot:"none", w_hands:["none", "none"]};
 	this.magic_effect = {};
-	this.inventory = [];
+	this.inventory = {};
 	this.base_hp = this.hp;
 	this.base_mp = this.mp;
 	this.base_ad = this.ad;
@@ -1131,7 +1133,7 @@ Player.prototype.levelUp = function(exp, num, stat)
 	}
 	else this["stat_"+stat]+=num;
 	this["exp_"+stat] = exp;
-	if(this == active_player) 
+	if(this == active_unit) 
 	{
 		reload(this, 'level');
 		reload(this, 'sp');
@@ -1151,7 +1153,7 @@ Player.prototype.gainExp = function(exp, stat)
 			var i;
 			for(i=0, total = result[i+2]; this["exp_"+stat] >= result[i+2]; this["exp_"+stat]-=result[i+2], i++){}
 			this["lvlup_exp"] = result[i+2];
-			if(this == active_player) 
+			if(this == active_unit) 
 			{
 				reload(this, 'exp_'+stat);
 				reload(this, 'lvlup_exp');
@@ -1196,7 +1198,7 @@ Npc.prototype.createRandom = function(npc)
 	});*/
 	this.equip_slot = {head:"none", u_body:"none", l_body:"none", a_hands:"none", foot:"none", w_hands:["none", "none"]};
 	this.magic_effect = {};
-	this.inventory = [];
+	this.inventory = {};
 	this.carry_weight = 100;
 	this.relation=0;
 	this.bat = 2.0;
