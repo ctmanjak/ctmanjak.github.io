@@ -140,13 +140,13 @@
 					else if($val == "debuff")
 					{
 						if($type == "equip") $item_effects[] = array("id" => 0x80, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type);
-						else $item_effects[] = array("id" => 0x80, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type);
+						else $item_effects[] = array("id" => 0x80, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type, "duration"=>$debuff_duration);
 						
 					}
 					else if($val == "buff")
 					{
 						if($type == "equip") $item_effects[] = array("id" => 0x100, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type);
-						else $item_effects[] = array("id" => 0x100, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type);
+						else $item_effects[] = array("id" => 0x100, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type, "duration"=>$buff_duration);
 					}
 					else if($val == "silence") $item_effects[] = array("id" => 0x4);
 					else if($val == "nothing") $item_effects[] = array("id" => 0);
@@ -158,9 +158,6 @@
 				$data["image"]=$filename;
 				if(!empty($item_effects)) $data["item_effect"] = $item_effects;
 				if(!empty($equip_slot)) $data["equip_slot"] = $equip_slot;
-				if(!empty($weapon_type)) $data["weapon_type"] = $weapon_type;
-				if(!empty($effect_duration)) $data["effect_duration"]=$effect_duration;
-				
 				$items[] = $data;
 				$items = json_encode($items);
 				file_put_contents("item.json", $items);
@@ -207,12 +204,11 @@
 			{
 				var magic_effect=$(this).val();
 				$(this).next().html("");
-				if($("#item_type").val() == "consume") $(this).next().append("지속시간 : <input type='range' name='effect_duration' min='5' max='100' step='5'><span></span><br>");
 				for(var val in magic_effect)
 				{
 					if(magic_effect[val] == "silence" && category == "item")
 					{
-						//$(this).next().append("지속시간 : <input type='range' name='silence_duration' min='5' max='100' step='5'><span></span><br>");
+						$(this).next().append("지속시간 : <input type='range' name='silence_duration' min='5' max='100' step='5'><span></span><br>");
 					}
 					if(magic_effect[val] == "resistance")
 					{
@@ -220,14 +216,15 @@
 					}
 					if(magic_effect[val] == "debuff")
 					{
-						$(this).next().append("약화효과 : <select name='debuff_type'><option value='stat_str'>힘<option value='stat_agi'>민첩<option value='stat_int'>지능<option value='stat_end'>인내<option value='ad'>공격력<option value='as'>공격속도<option value='max_hp'>HP<option value='max_mp'>MP<option value='ms'>이동속도<option value='armor'>방어력<option value='resist'>마법저항력</select><br>");
-						$(this).next().append("약화효과강도 : <input type='range' name='debuff_intensity' min='5' max='1000' step='5'><span></span><br><input type='radio' name='debuff_intensity_type' value='percent'>%<br><input type='radio' name='debuff_intensity_type' value='value' checked>값<br>");
-						
+						$(this).next().append("약화효과 : <select name='debuff_type'><option value='stat_str'>힘<option value='stat_agi'>민첩<option value='stat_int'>지능<option value='stat_end'>인내<option value='ad'>공격력<option value='as'>공격속도<option value='hp'>HP<option value='mp'>MP<option value='ms'>이동속도<option value='armor'>방어력<option value='resist'>마법저항력</select><br>");
+						$(this).next().append("효과강도(value) : <input type='range' name='debuff_intensity' min='5' max='1000' step='5'><span></span><br><input type='radio' name='debuff_intensity_type' value='percent'>%<br><input type='radio' name='debuff_intensity_type' value='value' checked>값");
+						if($("#item_type").val() == "consume") $(this).next().append("지속시간 : <input type='range' name='debuff_duration' min='5' max='100' step='5'><span></span><br>");
 					}
 					if(magic_effect[val] == "buff")
 					{
-						$(this).next().append("강화효과 : <select name='buff_type'><option value='stat_str'>힘<option value='stat_agi'>민첩<option value='stat_int'>지능<option value='stat_end'>인내<option value='ad'>공격력<option value='as'>공격속도<option value='max_hp'>HP<option value='max_mp'>MP<option value='ms'>이동속도<option value='armor'>방어력<option value='resist'>마법저항력</select><br>");
-						$(this).next().append("강화효과강도 : <input type='range' name='buff_intensity' min='5' max='1000' step='5'><span></span><br><input type='radio' name='buff_intensity_type' value='percent'>%<br><input type='radio' name='buff_intensity_type' value='value' checked>값<br>");
+						$(this).next().append("강화효과 : <select name='buff_type'><option value='stat_str'>힘<option value='stat_agi'>민첩<option value='stat_int'>지능<option value='stat_end'>인내<option value='ad'>공격력<option value='as'>공격속도<option value='hp'>HP<option value='mp'>MP<option value='ms'>이동속도<option value='armor'>방어력<option value='resist'>마법저항력</select><br>");
+						$(this).next().append("효과강도(value) : <input type='range' name='buff_intensity' min='5' max='1000' step='5'><span></span><br><input type='radio' name='buff_intensity_type' value='percent'>%<br><input type='radio' name='buff_intensity_type' value='value' checked>값");
+						if($("#item_type").val() == "consume") $(this).next().append("지속시간 : <input type='range' name='buff_duration' min='5' max='100' step='5'><span></span><br>");
 					}
 				}
 			});
@@ -246,8 +243,8 @@
 					$(".add_info").append('이름 : <input type="text" name="name"><span></span><br>'+
 					'레벨 : <input type="number" name="level" min="1" max="150"><br>'+
 					'사진 : <input type="file" name="image" accept="image/*"><br>'+
-					'HP : <input type="number" name="max_hp" min="1"><br>'+
-					'MP : <input type="number" name="max_mp" min="1"><br>'+
+					'HP : <input type="number" name="hp" min="1"><br>'+
+					'MP : <input type="number" name="mp" min="1"><br>'+
 					'공격력 : <input type="number" name="ad" min="1"><br>'+
 					'공격속도 : <input type="number" name="as" min="1"><br>'+
 					'이동속도 : <input type="number" name="ms" min="1"><br>'+
@@ -277,7 +274,7 @@
 				}
 				else if(category == "item")
 				{
-					$(".add_info").append('타입 : <select name="type" id="item_type"><option value="consume">소모품<option value="equip">장비<option value="etc">기타</select><div></div>'+
+					$(".add_info").append('타입 : <select name="type" id="item_type"><option value="consume">소모품<option value="equip">장비<option value="etc">기타</select><span></span><br>'+
 					'사진 : <input type="file" name="image" accept="image/*"><br>'+
 					'이름 : <input type="text" name="name"><span></span><br>'+
 					'설명 : <input type="text" name="desc" id="add_desc"><br>'+
@@ -291,16 +288,7 @@
 				$(this).next().empty();
 				if(item_type == "equip")
 				{
-					$(this).next().append("부위 : <select name='equip_slot' id='equip_slot'><option value='head'>머리<option value='u_body'>상체<option value='l_body'>하체<option value='a_hands'>손(방어구)<option value='foot'>발<option value='w_hands'>손(무기)</select><div></div>");
-				}
-			});
-			$("body").on("change", "#equip_slot", function(event)
-			{
-				var equip_slot = $(this).val();
-				$(this).next().empty();
-				if(equip_slot == "w_hands")
-				{
-					$(this).next().append("타입 : <select name='weapon_type'><option value='onehand'>한손<option value='twohands'>양손<option value='range'>원거리");
+					$(this).next().append("부위 : <select name='equip_slot'><option value='head'>머리<option value='u_body'>상체<option value='l_body'>하체<option value='a_hands'>손(방어구)<option value='foot'>발<option value='w_hands'>손(무기)");
 				}
 			});
 			/*$('#additem').submit(function()

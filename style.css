@@ -207,6 +207,7 @@ body
 .player_effect
 {
 	overflow:hidden;
+	padding:5px;
 	display:inline-block;
 	position:absolute;
 	border:1px solid;
@@ -214,7 +215,7 @@ body
 	left:0;
 	width:13%;
 	height:30%;
-	font-size:0.9em;
+	font-size:14px;
 }
 
 .player_effect ul
@@ -466,6 +467,7 @@ body
 	padding:0;
 	margin-right:5px;
 	list-style-type:none;
+	font-size:1.2em;
 	display:inline-block;
 	border:1px solid;
 	position:relative;
@@ -498,12 +500,12 @@ body
 }
 .item_detail
 {
-	font-size:0.8em;
 	z-index:1;
+	pointer-events:none;
 	position:absolute;
 	display:inline-block;
 	border:1px solid;
-	width:200px;
+	width:150px;
 	height:200px;
 	background:#fafad2;
 }
@@ -525,7 +527,7 @@ body
 .item_content
 {
 	word-break:break-all;
-	font-size:1.0em;
+	font-size:0.8em;
 	display:inline-block;
 	position:absolute;
 	top:8px;
@@ -557,14 +559,6 @@ body
 {
 	list-style-type:none;
 }
-.effect_detail
-{
-	position:absolute;
-	background:#fafad2;
-	width:100%;
-	margin:0;
-	padding:0;
-}
 .h_line
 {
 	position:absolute;
@@ -584,16 +578,4 @@ body
 .hide
 {
 	display:none;
-}
-.ignore_event
-{
-	pointer-events:none;
-}
-#passive
-{
-	background:#838b83;
-}
-#active
-{
-	background:#cdc9c9;
 }
