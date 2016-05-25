@@ -217,15 +217,13 @@
 					if(magic_effect[val] == "debuff")
 					{
 						$(this).next().append("약화효과 : <select name='debuff_type'><option value='stat_str'>힘<option value='stat_agi'>민첩<option value='stat_int'>지능<option value='stat_end'>인내<option value='ad'>공격력<option value='as'>공격속도<option value='hp'>HP<option value='mp'>MP<option value='ms'>이동속도<option value='armor'>방어력<option value='resist'>마법저항력</select><br>");
-						$(this).next().append("효과강도(%) : <input type='range' name='debuff_intensity' min='5' max='1000' step='5'><span></span><input type='radio' name='debuff_intensity_type' value='percent'><br>");
-						$(this).next().append("효과강도(value) : <input type='range' name='debuff_intensity' min='5' max='1000' step='5'><span></span><input type='radio' name='debuff_intensity_type' value='value' checked><br>");
+						$(this).next().append("효과강도(value) : <input type='range' name='debuff_intensity' min='5' max='1000' step='5'><span></span><br><input type='radio' name='debuff_intensity_type' value='percent'>%<br><input type='radio' name='debuff_intensity_type' value='value' checked>값");
 						if($("#item_type").val() == "consume") $(this).next().append("지속시간 : <input type='range' name='debuff_duration' min='5' max='100' step='5'><span></span><br>");
 					}
 					if(magic_effect[val] == "buff")
 					{
 						$(this).next().append("강화효과 : <select name='buff_type'><option value='stat_str'>힘<option value='stat_agi'>민첩<option value='stat_int'>지능<option value='stat_end'>인내<option value='ad'>공격력<option value='as'>공격속도<option value='hp'>HP<option value='mp'>MP<option value='ms'>이동속도<option value='armor'>방어력<option value='resist'>마법저항력</select><br>");
-						$(this).next().append("효과강도(%) : <input type='range' name='buff_intensity' min='5' max='1000' step='5'><span></span><input type='radio' name='buff_intensity_type' value='percent'><br>");
-						$(this).next().append("효과강도(value) : <input type='range' name='buff_intensity' min='5' max='1000' step='5'><span></span><input type='radio' name='buff_intensity_type' value='value' checked><br>");
+						$(this).next().append("효과강도(value) : <input type='range' name='buff_intensity' min='5' max='1000' step='5'><span></span><br><input type='radio' name='buff_intensity_type' value='percent'>%<br><input type='radio' name='buff_intensity_type' value='value' checked>값");
 						if($("#item_type").val() == "consume") $(this).next().append("지속시간 : <input type='range' name='buff_duration' min='5' max='100' step='5'><span></span><br>");
 					}
 				}

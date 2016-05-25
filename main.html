@@ -147,7 +147,7 @@
 			
 			var reloadInventory = function(target)
 			{
-			$(".inventory_list").empty();
+				$(".inventory_list").empty();
 				for(var i = 0; i < target.inventory.length; i++)
 				{
 					var item_id = target.inventory[i]['id'];
@@ -208,6 +208,13 @@
 					//$(".inventory_list > ul").append("<a href='#' class='select_item' id='item_"+i+"'><li>"+target.inventory[i]['name']+"</li></a>")
 					//$(".inventory_list").append('<div class="inventory_item"><div class="item_header"><span>'+item_name+' '+item_slot+'</span></div><div class="item_content"><span>'+item_desc+'</span></div></div>');
 					$(".inventory_list").append('<div class="inventory_item"><a href="#" class="select_item" id="item_'+i+'"><div class="inventory_image"><img src="'+item_image+'"></div></a></div><div class="item_detail hide"><div class="item_header"><div class="item_name">'+item_name+'</div><div class="item_slot">'+item_slot+'</div></div><div class="item_content"><div class="h_line"></div><div class="item_desc">'+item_desc+'</div><div class="h_line"></div><div class="item_effect"><ul>'+item_effect+'</ul></div></div></div></div>');
+					for(var slot in target.equip_slot)
+					{
+						if(target.equip_slot[slot] == i)
+						{
+							$(".select_item#item_"+i).parent().addClass("equipped");
+						}
+					}
 				}
 			}
 			$("body").on({
@@ -226,24 +233,32 @@
 			$("body").on("click",".select_item",function(event)
 			{
 				event.preventDefault();
-				$(this).parent().toggleClass("equiped");
-				equipItem(active_player, active_player.inventory[$(this).attr("id").split("_")[1]]);
+				equipItem(active_player, $(this).attr("id").split("_")[1]);
 			});
 			var equipItem = function(target, item)
 			{
+				var item_id =  item;
+				var item = target.inventory[item_id];
 				var equip_state = 0;
 				for(var slot in target.equip_slot)
 				{
 					if(slot == item.equip_slot)
 					{
-						if(target.equip_slot[slot] == 0)
+						if(target.equip_slot[slot] == "none")
 						{
-							target.equip_slot[slot] = 1;
+							target.equip_slot[slot] = item_id;
 							equip_state = 1;
+						}
+						else if(target.equip_slot[slot] == item_id)
+						{
+							target.equip_slot[slot] = "none";
+							equip_state = 2;
 						}
 						else
 						{
-							equip_state = 2;
+							equipItem(target, target.equip_slot[slot]);
+							target.equip_slot[slot] = item_id;
+							equip_state = 1;
 						}
 						break;
 					}
@@ -261,7 +276,7 @@
 							}
 							else
 							{
-								target[item.item_effect[i]['type']] += parseInt(item.item_effect[i]['intensity'])*target[item.item_effect[i]['type']];
+								target[item.item_effect[i]['type']] += (parseInt(item.item_effect[i]['intensity'])*0.01)*target["base_"+item.item_effect[i]['type']];
 							}
 						}
 						else if(item.item_effect[i]['id'] == magic_effect_id['debuff'])
@@ -272,41 +287,42 @@
 							}
 							else
 							{
-								target[item.item_effect[i]['type']] -= parseInt(item.item_effect[i]['intensity'])*target[item.item_effect[i]['type']];
+								target[item.item_effect[i]['type']] -= (parseInt(item.item_effect[i]['intensity'])*0.01)*target["base_"+item.item_effect[i]['type']];
 							}
 						}
 						reload(target, item.item_effect[i]['type']);
 					}
+					$(".select_item#item_"+item_id).parent().addClass("equipped");
 				}
 				else if(equip_state == 2)
 				{
 					for(var i = 0; i < item.item_effect.length; i++)
 					{
-						if(item.item_effect[i] === undefined) item.item_effect[i] = {};
 						if(item.item_effect[i]['id'] == magic_effect_id['buff'])
 						{
 							if(item.item_effect[i]['intensity_type'] == "value")
 							{
-								target[item.item_effect[i]['type']] = target["base_"+item.item_effect[i]['type']] + parseInt(item.item_effect[i]['intensity']);
+								target[item.item_effect[i]['type']] -= parseInt(item.item_effect[i]['intensity']);
 							}
 							else
 							{
-								target[item.item_effect[i]['type']] += parseInt(item.item_effect[i]['intensity'])*target["base_"+item.item_effect[i]['type']];
+								target[item.item_effect[i]['type']] -= (parseInt(item.item_effect[i]['intensity'])*0.01)*target["base_"+item.item_effect[i]['type']];
 							}
 						}
 						else if(item.item_effect[i]['id'] == magic_effect_id['debuff'])
 						{
 							if(item.item_effect[i]['intensity_type'] == "value")
 							{
-								target[item.item_effect[i]['type']] = target["base_"+item.item_effect[i]['type']] - parseInt(item.item_effect[i]['intensity']);
+								target[item.item_effect[i]['type']] += parseInt(item.item_effect[i]['intensity']);
 							}
 							else
 							{
-								target[item.item_effect[i]['type']] -= parseInt(item.item_effect[i]['intensity'])*target["base_"+item.item_effect[i]['type']];
+								target[item.item_effect[i]['type']] += (parseInt(item.item_effect[i]['intensity'])*0.01)*target["base_"+item.item_effect[i]['type']];
 							}
 						}
 						reload(target, item.item_effect[i]['type']);
 					}
+					$(".select_item#item_"+item_id).parent().removeClass("equipped");
 				}
 			}
 			var giveItem = function(target, id)
@@ -334,16 +350,16 @@
 				$('.player_list > ul').append("<a href='#' class='select_player' id='player'><li id='player'>"+player['char_name']+" <span id='hp'>"+player['hp']+"</span>/<span id='max_hp'>"+player['max_hp']+"</span></li></a>");
 				$(".startgame").addClass("hide");
 				$(".select_player")[0].click();
-				giveItem(player, 0);
+				giveItem(player, 2);
 				giveItem(player, 1);
+				giveItem(player, 0);
+				giveItem(player, 3);
 				reloadInventory(player);
 				reload(active_player);
 				moveLocation(0);
 				if(active_player.sp > 0) $(".inc_stat").removeClass("hide");
 				$("#test").click();
 				$("#inventory").children()[0].click();
-				
-				
 			});
 		</script>
 	</body>

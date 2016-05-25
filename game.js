@@ -472,6 +472,7 @@ $('#save').click(function(event)
 {
 	event.preventDefault();
 	var save_data = {};
+	//localStorage.save_data = "";
 	if(save_data['follower'] === undefined) save_data['follower'] ={};
 	if(save_data['npc'] === undefined) save_data['npc'] ={};
 	for(var i= 0; i < followers.length; i++)
@@ -502,12 +503,12 @@ $('#save').click(function(event)
 	}
 	save_data['cur_location'] = cur_location;
 	save_data['cur_state'] = cur_state;
-	localStorage.save_data = btoa(JSON.stringify(save_data));
+	localStorage.save_data = btoa(escape(JSON.stringify(save_data)));
 });
 $('#load').click(function(event)
 {
 	event.preventDefault();
-	var load_data = JSON.parse(atob(localStorage.save_data));
+	var load_data = JSON.parse(unescape(atob(localStorage.save_data)));
 	cur_location = load_data['cur_location'];
 	cur_state = load_data['cur_state'];
 	moveLocation(cur_location);
@@ -551,7 +552,8 @@ $('#load').click(function(event)
 		addCharList(temp);
 	}
 	$(".select_player")[0].click();
-	$(".select_npc")[0].click();
+	if(npcs.length > 0) $(".select_npc")[0].click();
+	reloadInventory(active_player);
 });
 $('#explore').click(function(event)
 {
@@ -926,7 +928,7 @@ Player.prototype.createPlayer = function()
 	this.hp += this.stat_end*2;
 	this.max_hp = this.hp;
 	this.max_mp = this.mp;
-	this.equip_slot = {head:0, u_body:0, l_body:0, a_hands:0, foot:0, w_hands:0};
+	this.equip_slot = {head:"none", u_body:"none", l_body:"none", a_hands:"none", foot:"none", w_hands:"none"};
 	this.magic_effect = {};
 	this.inventory = [];
 	this.base_hp = this.hp;
@@ -1014,7 +1016,7 @@ Npc.prototype.createRandom = function(npc)
 		this.npc_name = result['defname'][Math.floor(Math.random()*result['defname'].length)];
 	}
 	});*/
-	this.equip_slot = {head:0, u_body:0, l_body:0, a_hands:0, foot:0, w_lhand:0, w_rhand:0};
+	this.equip_slot = {head:"none", u_body:"none", l_body:"none", a_hands:"none", foot:"none", w_hands:"none"};
 	this.magic_effect = {};
 	this.inventory = [];
 	this.relation=0;
