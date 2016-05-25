@@ -208,7 +208,7 @@ $('#attack').click(function(event)
 			$('#attack').removeAttr("disabled");
 		}, active_player.bat/((100+active_player.as)*0.01)*1000);
 		adjustMagicEffect(damage_effect, {amount:player.ad, type:"physical"});
-		addMagicEffect(active_npc, {duration:1, effect:damage_effect);
+		addMagicEffect(active_npc, {duration:1, effect:damage_effect});
 		$(".frame").addClass("ani_player_attack");
 		setTimeout(function()
 		{
