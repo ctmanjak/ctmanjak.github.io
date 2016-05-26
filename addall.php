@@ -96,7 +96,35 @@
 					$src = $_FILES['image']['tmp_name'];
 					move_uploaded_file($src, $dest);
 				}
-				$npcs[] = array("id"=>$npc_id, "char_name"=>$name, "level"=>$level);
+				$data['id'] = $npc_id;
+				$data['char_name'] = $name;
+				$data['level'] = $level;
+				if(!empty($max_hp)) $data['max_hp'] = $max_hp;
+				if(!empty($max_mp)) $data['max_mp'] = $max_mp;
+				if(!empty($ad)) $data['ad'] = $ad;
+				if(!empty($as)) $data['as'] = $as;
+				if(!empty($ms)) $data['ms'] = $ms;
+				if(!empty($armor)) $data['armor'] = $armor;
+				if(!empty($resist)) $data['resist'] = $resist;
+				if(!empty($stat_str)) $data['stat_str'] = $stat_str;
+				if(!empty($stat_agi)) $data['stat_agi'] = $stat_agi;
+				if(!empty($stat_int)) $data['stat_int'] = $stat_int;
+				if(!empty($stat_end)) $data['stat_end'] = $stat_end;
+				if(!empty($inventory))
+				{
+					$data['inventory'] = array();
+					$inventory = explode(",",$inventory);
+					for($i = 0; $i < count($inventory); $i++)
+					{
+						$data['inventory'][$i] = $inventory[$i];
+					}
+				}
+				print_r($data['inventory']);
+				if(!empty($equip_slot))
+				{
+					$equip_slot = explode(",", $equip_slot);
+				}
+				$npcs[] = $data;
 				$npcs = json_encode($npcs);
 				file_put_contents("npc.json", $npcs);
 				print "<script>history.go(-1)</script>";
@@ -246,19 +274,20 @@
 					$(".add_info").append('이름 : <input type="text" name="name"><span></span><br>'+
 					'레벨 : <input type="number" name="level" min="1" max="150"><br>'+
 					'사진 : <input type="file" name="image" accept="image/*"><br>'+
-					'HP : <input type="number" name="max_hp" min="1"><br>'+
-					'MP : <input type="number" name="max_mp" min="1"><br>'+
-					'공격력 : <input type="number" name="ad" min="1"><br>'+
-					'공격속도 : <input type="number" name="as" min="1"><br>'+
-					'이동속도 : <input type="number" name="ms" min="1"><br>'+
-					'방어력 : <input type="number" name="armor" min="1"><br>'+
-					'마법저항력 : <input type="number" name="resist" min="1"><br>'+
-					'힘 : <input type="number" name="stat_str" min="1"><br>'+
-					'민첩 : <input type="number" name="stat_agi" min="1"><br>'+
-					'지능 : <input type="number" name="stat_int" min="1"><br>'+
-					'인내 : <input type="number" name="stat_end" min="1"><br>'+
-					'아이템 : <input type="text" name="equip_slot" min="1"><br>'+
-					'돈 : <input type="number" name="money" min="1"><br>');
+					'HP : <input type="number" name="max_hp"><br>'+
+					'MP : <input type="number" name="max_mp"><br>'+
+					'공격력 : <input type="number" name="ad"><br>'+
+					'공격속도 : <input type="number" name="as"><br>'+
+					'이동속도 : <input type="number" name="ms"><br>'+
+					'방어력 : <input type="number" name="armor"><br>'+
+					'마법저항력 : <input type="number" name="resist"><br>'+
+					'힘 : <input type="number" name="stat_str"><br>'+
+					'민첩 : <input type="number" name="stat_agi"><br>'+
+					'지능 : <input type="number" name="stat_int"><br>'+
+					'인내 : <input type="number" name="stat_end"><br>'+
+					'아이템 : <input type="text" name="inventory"><br>'+
+					'착용아이템 : <input type="text" name="equip_slot"> 같은 부위 아이템 착용시키면 뒤에 쓴 것 적용, 인벤토리에 있는 순서를 써야함(0부터)<br>'+
+					'돈 : <input type="number" name="money"><br>');
 				}
 				else if(category == "location")
 				{
