@@ -38,12 +38,13 @@
 			</div>
 			<!--<div class="player_list">
 			</div>-->
-			<div class="player_effect">
+			<div class="player_effect effect_list">
 				<ul id="passive"></ul>
 				<div style="margin:0px"></div>
 				<ul id="active"></ul>
 			</div>
 			<div class='effect_detail hide'><div class='effect_intensity'></div></div>
+			<div class="item_detail hide"><div class="item_header"><div class="item_name"></div><div class="item_slot"></div></div><div class="item_content"><div class="h_line"></div><div class="item_desc"></div><div class="h_line"></div><div class="item_effect"><div class="item_duration"></div><ul></ul></div></div></div>
 			<div class="npc_info_frame">
 				<div class="npc_info">
 					<ul>
@@ -73,7 +74,7 @@
 				
 				</ul>
 			</div>
-			<div class="npc_effect">
+			<div class="npc_effect effect_list">
 				<ul id="passive">
 				
 				</ul>
@@ -89,37 +90,37 @@
 				<div class="background">
 					<div class="bgimg"></div>
 				</div>
-				<div class="dialogue_frame">
-					<div class="dialogue_text">
-						<div class="dialogue_name">
-						</div>
-						<div class="dialogue_content">
-						</div>
-					</div>
-				</div>
 			</div>
-			<div class="location_progress">
+			<div class="dialogue_frame">
+				<div class="dialogue_image">
+				</div>
 				<div class="dialogue_text">
 					<div class="dialogue_name">
 					</div>
 					<div class="dialogue_content">
+					</div>
+					<div class="dialogue_select">
+						<ul>
+						
+						</ul>
 					</div>
 				</div>
 			</div>
 			<div class="user_control">
 				<div class="control_category">
 					<ul>
-						<a href="#" id="controlbox"><li class="active">명령</li></a><a href="#" id="player_inventory"><li>인벤토리</li></a><a href="#" id="active_unit_inventory"><li>선택 유닛 인벤토리</li></a><a href="#" id="quest"><li>퀘스트</li></a>
+						<li class="active" id="controlbox">명령</li><li id="player_inventory">인벤토리</li><li id="active_unit_inventory">선택 유닛 인벤토리</li><li id="quest">퀘스트</li>
 					</ul>
 				</div>
 				<div class="controlscreen">
 					<div class="controlbox">
 						<input type="button" id="test" value="TEST">
 						<input type="button" id="explore" value="탐험">
+						<input type="button" class="hide" id="meet" value="방문">
 						<input type="button" id="attack" value="공격">
-						<input type="button" id="dialogue" value="대화">
+						<input type="button" class="hide" id="dialogue" value="대화">
 						<input type="button" class="hide" id="main_location" value="나가기">
-						<input type="button" id="move_location" value="지역 이동">
+						<input type="button" class="" id="move_location" value="지역 이동">
 					</div>
 					<div class="player_inventory hide">
 						<div class="inventory_list">
@@ -137,6 +138,28 @@
 							
 						</div>
 					</div>
+					<div class="quest hide">
+						<div class="quest_list">
+							<ul class="in_progress_quest">
+								
+							</ul>
+							<ul class="complete_quest">
+								
+							</ul>
+						</div>
+						<div class="quest_detail">
+							<div class="quest_header">
+								<div class="quest_name">
+								</div>
+								<div class="quest_npc">
+								</div>
+							</div>
+							<div class="quest_desc">
+							</div>
+							<div class="quest_reward">
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -145,7 +168,7 @@
 				<div style="position:absolute;right:0"><input type="button" class="close" value="닫기"></div>
 				<div class="location_category">
 					<ul>
-						<a href="#" id="sub_location"><li>현재 지역</li></a><a href="#" id="move_location"><li>다른 지역</li></a>
+						<li id="sub_location">현재 지역</li><li id="move_location">다른 지역</li>
 					</ul>
 				</div>
 				<div class="location_list">
@@ -167,474 +190,264 @@
 			$("#test").click(function(event)
 			{
 				event.preventDefault();
-				convertType(active_unit);
+				$("#dialogue").click();
+				//convertType(active_unit);
 			});
-			var inventory_item_info = {};
-			var active_unit_inventory = {};
-			var reloadEffectlist = function(target)
+			var quest_condition = {nothing:0, first_meet:1, in_progress_quest:2, complete_quest:3, incomplete_quest:4, check_stat:5};
+			var event_dialogue = {nothing:1, next_dialogue:2, move_location:3, give_item:4, give_money:5, change_npc:6, give_effect:7, add_quest:8, complete_quest:9};
+			var quest_complete_condition = {nothing:0, visit_npc:1, visit_location:2, give_item:3, give_money:4, kill_npc:5};
+			var cur_dialogue;
+			var changeDialogue = function(dialogue_id)
 			{
-				$(".npc_effect > ul").empty();
-				for(var effect in target.magic_effect)
-				{
-					addEffectlist(target, target.magic_effect[effect]);
-				}
-			}
-			var addEffectlist = function(target, effect)
-			{
-				if(target != active_unit && target != player) return;
-				var effect_name = effect['effect_name'];
-				var effect_info = "";
-				for(var a = 0; a < effect['effect'].length; a++)
-				{
-					if(effect['effect'][a]['type'] == "ad") effect_info += "공격력";
-					else if(effect['effect'][a]['type'] == "as") effect_info += "공격속도";
-					else if(effect['effect'][a]['type'] == "hp") effect_info += "HP";
-					else if(effect['effect'][a]['type'] == "mp") effect_info += "MP";
-					else if(effect['effect'][a]['type'] == "ms") effect_info += "이동속도";
-					else if(effect['effect'][a]['type'] == "armor") effect_info += "방어력";
-					else if(effect['effect'][a]['type'] == "resist") effect_info += "마법저항력";
-					else if(effect['effect'][a]['type'] == "stat_str") effect_info += "힘";
-					else if(effect['effect'][a]['type'] == "stat_agi") effect_info += "민첩";
-					else if(effect['effect'][a]['type'] == "stat_int") effect_info += "지능";
-					else if(effect['effect'][a]['type'] == "stat_end") effect_info += "인내";
-					if(effect['effect'][a]['id'] == magic_effect_id["buff"])
-					{
-						effect_info += "+";
-					}
-					else if(effect['effect'][a]['id'] == magic_effect_id["debuff"])
-					{
-						effect_info += "-";
-					}
-					effect_info += effect['effect'][a]['intensity']+(effect['effect'][a]['intensity_type']=="percent"?"%<br>":"<br>");
-				}
-				if(effect['duration'] == "passive")
-				{
-					if(target == player) $(".player_effect > ul#passive").append("<li id='"+effect_name+"'>"+effect['name']+"</li>");
-					else $(".npc_effect > ul#passive").append("<li id='"+effect_name+"'>"+effect['name']+"</li>");
-				}
-				else 
-				{
-					if(target == player) $(".player_effect > ul#active").append("<li id='"+effect_name+"'>"+effect['name']+" <span id='duration'>"+effect['duration']+"</span></li>");
-					else $(".npc_effect > ul#active").append("<li id='"+effect_name+"'>"+effect['name']+" <span id='duration'>"+effect['duration']+"</span></li>");
-				}
-			}
-			var reloadInventory = function(target)
-			{
-				active_unit_inventory = {};
-				$(".active_unit_inventory > .inventory_list").empty();
-				
+				$(".dialogue_content").text("");
+				$(".dialogue_select > ul").empty();
 				$.ajax({
-					url:"item.json",
+					url:"dialogue.json",
+					dataType:"json",
+					type:"post",
+					success:function(result)
+					{
+						cur_dialogue = result[dialogue_id];
+						$(".dialogue_content").text(active_unit['char_name']+" : "+result[dialogue_id]['content']);
+						for(var answer in result[dialogue_id]['answer'])
+						{
+							$(".dialogue_select > ul").append("<li class='select_answer' id='"+answer+"'>"+result[dialogue_id]['answer'][answer]['answer_content']+"</li>");
+						}
+					}
+				});
+			}
+			var finishDialogue = function()
+			{
+				$(".dialogue_content").text("");
+				$(".dialogue_select > ul").empty();
+			}
+			var firstDialogue = function()
+			{
+				$(".dialogue_content").text("");
+				$(".dialogue_select > ul").empty();
+				$(".dialogue_content").text(active_unit['char_name']+" : 무슨 일이신가요?");
+				//$(".dialogue_select > ul").append("<li class='first_answer' id='trade'>거래</li>");
+				$(".dialogue_select > ul").append("<li class='first_answer' id='quest'>퀘스트</li>");
+				$(".dialogue_select > ul").append("<li class='first_answer' id='ip_quest'>진행 퀘스트</li>");
+				$(".dialogue_select > ul").append("<li class='first_answer' id='quit'>X</li>");
+			}
+			$("body").on("click", ".first_answer", function(event)
+			{
+				$(".dialogue_select > ul").empty();
+				if($(this).attr("id") == "quest")
+				{
+					$.ajax({
+					url:"quest.json",
 					dataType:"json",
 					type:"post",
 					async:false,
 					success:function(result)
 					{
-						if(active_unit_inventory === undefined) active_unit_inventory = {};
-						if(target.inventory === undefined) target.inventory = {};
-						for(var item in target.inventory)
+						for(var j = 0; j < active_unit['quest'].length; j++)
 						{
-							active_unit_inventory[item] = result[target.inventory[item]];
-						}
-					}
-				});
-				for(var i = 0; i < Object.keys(target.inventory).length; i++)
-				{
-					addInventory(target, Object.keys(target.inventory)[i]);
-				}
-			}
-			$("body").on({
-			mouseenter : function(event)
-			{
-				var left = $(this).parent().offset()['left']-$(".controlscreen").offset()['left'];
-				$(this).parent().css("z-index", "2");
-				$(this).parent().next().removeClass("hide");
-				$(this).parent().next().css("left", left);
-			},
-			mouseleave : function(event)
-			{
-				$(this).parent().css("z-index", "0");
-				$(this).parent().next().addClass("hide");
-			}}, ".select_item");
-			$("body").on("click",".player_inventory .select_item",function(event)
-			{
-				var item_effects = [];
-				event.preventDefault();
-				var item_type = inventory_item_info[$(this).attr("id").split("_")[1]]['type'];
-				var item_effect = inventory_item_info[$(this).attr("id").split("_")[1]]['item_effect'];
-				if(item_type == "equip") equipItem(player, $(this).attr("id").split("_")[1]);
-				else if(item_type == "consume")
-				{
-					for(var i = 0; i < item_effect.length; i++)
-					{
-						item_effect[i]['name'] = inventory_item_info[$(this).attr("id").split("_")[1]]['name'];
-						item_effects.push(item_effect[i]);
-					}
-					addMagicEffect(player, {name:inventory_item_info[$(this).attr("id").split("_")[1]]['name'],effect_name:"consume_"+$(this).attr("id").split("_")[1], duration:inventory_item_info[$(this).attr("id").split("_")[1]]['effect_duration'], effect:item_effects});
-					delItem(player, $(this).attr("id").split("_")[1]);
-				}
-			});
-			$("body").on("click",".active_unit_inventory .select_item",function(event)
-			{
-				var item_effects = [];
-				event.preventDefault();
-				var item_type = active_unit_inventory[$(this).attr("id").split("_")[1]]['type'];
-				var item_effect = active_unit_inventory[$(this).attr("id").split("_")[1]]['item_effect'];
-				if(item_type == "equip") equipItem(active_unit, $(this).attr("id").split("_")[1]);
-				else if(item_type == "consume")
-				{
-					for(var i = 0; i < item_effect.length; i++)
-					{
-						item_effect[i]['name'] = active_unit_inventory[$(this).attr("id").split("_")[1]]['name'];
-						item_effects.push(item_effect[i]);
-					}
-					addMagicEffect(active_unit, {name:active_unit_inventory[$(this).attr("id").split("_")[1]]['name'],effect_name:"consume_"+$(this).attr("id").split("_")[1], duration:inventory_item_info[$(this).attr("id").split("_")[1]]['effect_duration'], effect:item_effects});
-					delItem(active_unit, $(this).attr("id").split("_")[1]);
-				}
-			});
-			var delItem = function(target, item_id)
-			{
-				if(target == player) delete inventory_item_info[item_id];
-				else delete active_unit.inventory[item_id];
-				$(".player_inventory #item_"+item_id).parent().next().remove();
-				$(".player_inventory #item_"+item_id).parent().remove();
-				//reloadInventory(target);
-			}
-			var equipItem = function(target, item)
-			{
-				var item_id = item;
-				var item;
-				if(target == player) item = inventory_item_info[item_id];
-				else item = active_unit_inventory[item_id];
-				var equip_state = 0;
-				var item_effects = [];
-				for(var slot in target.equip_slot)
-				{
-					if(item === undefined) item = {};
-					if(slot == item.equip_slot)
-					{
-						if(slot == "w_hands")
-						{
-							if(item.weapon_type == "twohands" || item.weapon_type == "range" )
+							for(var i = 0; i < player['quest_state']['in_progress'].length; i++)
 							{
-								for(var i = 0; i < target.equip_slot[slot].length ; i++)
+								if(player['quest_state']['in_progress'][i] == active_unit['quest'][j])
 								{
-									if(target.equip_slot[slot][i] != "none" && target.equip_slot[slot][i] != item_id)
-									{
-										equipItem(target, target.equip_slot[slot][i]);
-										if(i == 1)
-										{
-											target.equip_slot[slot][0] = item_id;
-											target.equip_slot[slot][1] = item_id;
-											equip_state = 1;
-										}
-									}
-									else if(target.equip_slot[slot][i] == item_id)
-									{
-										target.equip_slot[slot][0] = "none";
-										target.equip_slot[slot][1] = "none";
-										equip_state = 2;
-										break;
-									}
-									else if(target.equip_slot[slot][0] == "none" && target.equip_slot[slot][1] == "none")
-									{
-										target.equip_slot[slot][0] = item_id;
-										target.equip_slot[slot][1] = item_id;
-										equip_state = 1;
-										break;
-									}
+									changeDialogue(result[active_unit['quest'][j]]['progress_dialogue']);
+									return;
 								}
 							}
-							else
+							for(var i = 0; i < player['quest_state']['complete'].length; i++)
 							{
-								for(var i = 0; i < target.equip_slot[slot].length ; i++)
+								if(player['quest_state']['complete'][i] == active_unit['quest'][j])
 								{
-									if(target.equip_slot[slot][0] == "none" && target.equip_slot[slot][1] != item_id)
-									{
-										target.equip_slot[slot][i] = item_id;
-										equip_state = 1;
-										break;
-									}
-									else if(target.equip_slot[slot][i] == item_id)
-									{
-										target.equip_slot[slot][i] = "none";
-										equip_state = 2;
-										break;
-									}
-									else
-									{
-										if(i == 0) continue;
-										equipItem(target, target.equip_slot[slot][i]);
-										target.equip_slot[slot][i] = item_id;
-										equip_state = 1;
-									}
+									continue;
 								}
 							}
+							changeDialogue(result[active_unit['quest'][j]]['begin_dialogue']);
 						}
-						else
-						{
-							if(target.equip_slot[slot] == "none")
-							{
-								target.equip_slot[slot] = item_id;
-								equip_state = 1;
-							}
-							else if(target.equip_slot[slot] == item_id)
-							{
-								target.equip_slot[slot] = "none";
-								equip_state = 2;
-							}
-							else
-							{
-								equipItem(target, target.equip_slot[slot]);
-								target.equip_slot[slot] = item_id;
-								equip_state = 1;
-							}
-						}
-						break;
+					}
+					});
+				}
+				else if($(this).attr("id") == "ip_quest")
+				{
+					$(".dialogue_select > ul").append("<li class='first_answer' id='back'>"+"뒤로"+"</li>");
+					for(var quest in quests_info['in_progress_quest'])
+					{
+						checkCondition(quests_info['in_progress_quest'][quest]);
+						if(quests_info['in_progress_quest'][quest]['complete'] == 1) $(".dialogue_select > ul").append("<li class='ip_quest_answer' id='"+quest+"'>"+quests_info['in_progress_quest'][quest]['name']+"</li>");
 					}
 				}
-				if(equip_state == 1)
+				else if($(this).attr("id") == "quit")
 				{
-					for(var i = 0; i < item.item_effect.length; i++)
+					$(".dialogue_content").text("");
+				}
+				else if($(this).attr("id") == "back")
+				{
+					firstDialogue();
+				}
+			});
+			$("body").on("click", ".ip_quest_answer", function(event)
+			{
+				$(".dialogue_select > ul").empty();
+				console.log(quests_info['in_progress_quest'][$(this).attr("id")]);
+				changeDialogue(quests_info['in_progress_quest'][$(this).attr("id")]['complete_dialogue']);
+			});
+			var checkCondition = function(quest)
+			{
+				var complete_state = 1;
+				for(var i = 0; i < quest['complete_condition'].length; i++)
+				{
+					if(quest['complete_condition'][i]['event'] == quest_complete_condition['visit_npc'])
 					{
-						if(item.item_effect[i] === undefined) item.item_effect[i] = {};
-						item_effects.push(item.item_effect[i]);
-						/*if(item.item_effect[i]['id'] == magic_effect_id['buff'])
+						if(active_unit['id'] == quest['complete_condition'][i]['condition']['npc'])
 						{
-							if(item.item_effect[i]['intensity_type'] == "value")
+							quest['complete_condition'][i]['state'] = 1;
+						}
+						else complete_state = 0;
+					}
+					else if(quest['complete_condition'][i]['event'] == quest_complete_condition['visit_location'])
+					{
+						if(cur_location == quest['complete_condition'][i]['condition']['location'])
+						{
+							quest['complete_condition'][i]['state'] = 1;
+						}
+						else complete_state = 0;
+					}
+					else if(quest['complete_condition'][i]['event'] == quest_complete_condition['give_item'])
+					{
+						for(var item in player.inventory)
+						{
+							if(player.inventory[item] == quest['complete_condition'][i]['condition']['item'] && active_unit['id'] == quest['complete_condition'][i]['condition']['npc'])
 							{
-								target[item.item_effect[i]['type']] += parseInt(item.item_effect[i]['intensity']);
-							}
-							else
-							{
-								target[item.item_effect[i]['type']] += (parseInt(item.item_effect[i]['intensity'])*0.01)*target["base_"+item.item_effect[i]['type']];
+								quest['complete_condition'][i]['state'] = 1;
+								break;
 							}
 						}
-						else if(item.item_effect[i]['id'] == magic_effect_id['debuff'])
-						{
-							if(item.item_effect[i]['intensity_type'] == "value")
-							{
-								target[item.item_effect[i]['type']] -= parseInt(item.item_effect[i]['intensity']);
-							}
-							else
-							{
-								target[item.item_effect[i]['type']] -= (parseInt(item.item_effect[i]['intensity'])*0.01)*target["base_"+item.item_effect[i]['type']];
-							}
-						}*/
+						if(quest['complete_condition'][i]['state'] != 1) complete_state = 0;
 					}
-					addMagicEffect(target, {name:item['name'], effect_name:"equip_"+item_id, duration:"passive", effect:item_effects});
-					//reload(target, item.item_effect[i]['type']);
-					if(target == player) $(".player_inventory .select_item#item_"+item_id).parent().addClass("equipped");
-					else $(".active_unit_inventory .select_item#item_"+item_id).parent().addClass("equipped");
-				}
-				else if(equip_state == 2)
-				{
-					for(var i = 0; i < item.item_effect.length; i++)
+					else if(quest['complete_condition'][i]['event'] == quest_complete_condition['give_money'])
 					{
-						if(item.item_effect[i] === undefined) item.item_effect[i] = {};
-						adjustMagicEffect(item.item_effect[i], {name:item['name'], effect_id:"item_"+item_id});
+						if(player.money >= quest['complete_condition'][i]['condition']['money'] && active_unit['id'] == quest['complete_condition'][i]['condition']['npc'])
+						{
+							quest['complete_condition'][i]['state'] = 1;
+						}
+						else complete_state = 0;
+					}
+					else if(quest['complete_condition'][i]['event'] == quest_complete_condition['kill_npc'])
+					{
 						
-						/*if(item.item_effect[i]['id'] == magic_effect_id['buff'])
-						{
-							if(item.item_effect[i]['intensity_type'] == "value")
-							{
-								target[item.item_effect[i]['type']] -= parseInt(item.item_effect[i]['intensity']);
-							}
-							else
-							{
-								target[item.item_effect[i]['type']] -= (parseInt(item.item_effect[i]['intensity'])*0.01)*target["base_"+item.item_effect[i]['type']];
-							}
-						}
-						else if(item.item_effect[i]['id'] == magic_effect_id['debuff'])
-						{
-							if(item.item_effect[i]['intensity_type'] == "value")
-							{
-								target[item.item_effect[i]['type']] += parseInt(item.item_effect[i]['intensity']);
-							}
-							else
-							{
-								target[item.item_effect[i]['type']] += (parseInt(item.item_effect[i]['intensity'])*0.01)*target["base_"+item.item_effect[i]['type']];
-							}
-						}*/
-						reload(target, item.item_effect[i]['type']);
 					}
-					delMagicEffect(target, "equip_"+item_id);
-					if(target == player) $(".player_inventory .select_item#item_"+item_id).parent().removeClass("equipped");
-					else $(".active_unit_inventory .select_item#item_"+item_id).parent().removeClass("equipped");
+				}
+				if(complete_state == 1)
+				{
+					console.log(1);
+					quest['complete'] = 1;
 				}
 			}
-			var giveItem = function(target, id, num)
+			$("body").on("click", ".select_answer", function(event)
 			{
-				var num = num || 1;
-				if(num < 0) return;
+				$(this).parent().empty();
+				if(cur_dialogue['answer'][$(this).attr("id")]['answer_event_type'] == event_dialogue['nothing'])
+				{
+					$(".dialogue_content").text("");
+				}
+				else if(cur_dialogue['answer'][$(this).attr("id")]['answer_event_type'] == event_dialogue['next_dialogue'])
+				{
+					$(".dialogue_content").text("");
+					changeDialogue(cur_dialogue['answer'][$(this).attr("id")]['answer_event']);
+				}
+				else if(cur_dialogue['answer'][$(this).attr("id")]['answer_event_type'] == event_dialogue['add_quest'])
+				{
+					$(".dialogue_content").text("");
+					addQuest(cur_dialogue['answer'][$(this).attr("id")]['answer_event']);
+				}
+				else if(cur_dialogue['answer'][$(this).attr("id")]['answer_event_type'] == event_dialogue['complete_quest'])
+				{
+					$(".dialogue_content").text("");
+					completeQuest(cur_dialogue['answer'][$(this).attr("id")]['answer_event']);
+				}
+			});
+			$("#dialogue").click(function(event)
+			{
+				for(var val in quests_info['in_progress_quest'])
+				{
+					if(quests_info['in_progress_quest'][val]['complete_condition'] === undefined) quests_info['in_progress_quest'][val]['complete_condition'] = [];
+					for(var i = 0; i < quests_info['in_progress_quest'][val]['complete_condition'].length; i++)
+					{
+						if(quests_info['in_progress_quest'][val]['complete_condition'][i]['event'] == 1)
+						{
+							if(active_unit['id'] == quests_info['in_progress_quest'][val]['complete_condition'][i]['condition'])
+							{
+								quests_info['in_progress_quest'][val]['complete_condition'][i]['state'] = 1;
+							}
+						}
+					}
+				}
+				firstDialogue();
+			});
+			var quests_info = {in_progress_quest:{}, complete_quest:{}};
+			var addQuest = function(quest_id)
+			{
 				$.ajax({
-					url:"item.json",
+					url:"quest.json",
 					dataType:"json",
 					type:"post",
-					async:false,
 					success:function(result)
 					{
-						if(inventory_item_info === undefined) inventory_item_info = {};
-						if(target.inventory === undefined) target.inventory = {};
-						if(target == player)
-						{
-							while(num--)
-							{
-								target.inventory[Object.keys(target.inventory).length] = id;
-								inventory_item_info[Object.keys(inventory_item_info).length] = result[id];
-								inventory_item_info[Object.keys(inventory_item_info).length-1]['id'] = id;
-								addInventory(target, Object.keys(inventory_item_info).length-1);
-							}
-						}
-						else
-						{
-							while(num--)
-							{
-								target.inventory[Object.keys(target.inventory).length] = id;
-								active_unit_inventory[Object.keys(active_unit_inventory).length] = result[id];
-								active_unit_inventory[Object.keys(active_unit_inventory).length-1]['id'] = id;
-								addInventory(target, Object.keys(active_unit_inventory).length-1);
-							}
-						}
+						quests_info['in_progress_quest'][quest_id] = result[quest_id];
+						player['quest_state']['in_progress'].push(quest_id);
+						$('.quest_list > ul.in_progress_quest').append("<li class='select_quest' id='quest_"+quest_id+"'>"+result[quest_id]['name']+"</li>");
 					}
 				});
 			}
-			var getEffectInfo = function(effect)
+			var completeQuest = function(quest_id)
 			{
-				var effect_info = "";
-				for(var a = 0; a < effect['effect'].length; a++)
+				for(var i = 0; i < quests_info['in_progress_quest'][quest_id]['complete_condition'].length; i++)
 				{
-					if(effect['effect'][a]['type'] == "ad") effect_info += "공격력";
-					else if(effect['effect'][a]['type'] == "as") effect_info += "공격속도";
-					else if(effect['effect'][a]['type'] == "hp") effect_info += "HP";
-					else if(effect['effect'][a]['type'] == "mp") effect_info += "MP";
-					else if(effect['effect'][a]['type'] == "ms") effect_info += "이동속도";
-					else if(effect['effect'][a]['type'] == "armor") effect_info += "방어력";
-					else if(effect['effect'][a]['type'] == "resist") effect_info += "마법저항력";
-					else if(effect['effect'][a]['type'] == "stat_str") effect_info += "힘";
-					else if(effect['effect'][a]['type'] == "stat_agi") effect_info += "민첩";
-					else if(effect['effect'][a]['type'] == "stat_int") effect_info += "지능";
-					else if(effect['effect'][a]['type'] == "stat_end") effect_info += "인내";
-					if(effect['effect'][a]['id'] == magic_effect_id["buff"])
+					if(quests_info['in_progress_quest'][quest_id]['complete_condition'][i]['event'] == quest_complete_condition['give_item'])
 					{
-						effect_info += "+";
-					}
-					else if(effect['effect'][a]['id'] == magic_effect_id["debuff"])
-					{
-						effect_info += "-";
-					}
-					effect_info += effect['effect'][a]['intensity']+(effect['effect'][a]['intensity_type']=="percent"?"%<br>":"<br>");
-				}
-				return effect_info;
-			}
-			var addInventory = function(target, id)
-			{
-				var i = id;
-				var item_info;
-				if(target == player) item_info = inventory_item_info[i];
-				else item_info = active_unit_inventory[i];
-				var item_id = item_info['id'];
-				var item_name = item_info['name'];
-				var item_image = "/item/"+item_info['image'];
-				var item_desc = item_info['desc'];
-				var item_duration;
-				if(item_info['effect_duration'] == undefined) item_duration = "";
-				else item_duration = "지속시간 : "+item_info['effect_duration']+"초<br>";
-				var item_effects = item_info['item_effect'];
-				var item_effect = "<li>";
-				for(var j = 0; j < item_effects.length; j++)
-				{
-					if(item_effects[j]['type'] == "ad") item_effect += "공격력";
-					else if(item_effects[j]['type'] == "as") item_effect += "공격속도";
-					else if(item_effects[j]['type'] == "hp") item_effect += "HP";
-					else if(item_effects[j]['type'] == "mp") item_effect += "MP";
-					else if(item_effects[j]['type'] == "ms") item_effect += "이동속도";
-					else if(item_effects[j]['type'] == "armor") item_effect += "방어력";
-					else if(item_effects[j]['type'] == "resist") item_effect += "마법저항력";
-					else if(item_effects[j]['type'] == "stat_str") item_effect += "힘";
-					else if(item_effects[j]['type'] == "stat_agi") item_effect += "민첩";
-					else if(item_effects[j]['type'] == "stat_int") item_effect += "지능";
-					else if(item_effects[j]['type'] == "stat_end") item_effect += "인내";
-					if(item_effects[j]['id'] == magic_effect_id["buff"])
-					{
-						item_effect += "+";
-					}
-					else if(item_effects[j]['id'] == magic_effect_id["debuff"])
-					{
-						item_effect += "-";
-					}
-					item_effect += item_effects[j]['intensity']+(item_effects[j]['intensity_type']=="percent"?"%<br>":"<br>");
-				}
-				var item_slot;
-				if(item_info['type'] == "consume") item_slot = "소모품";
-				else if(item_info['type'] == "etc") item_slot = "기타";
-				else if(item_info['equip_slot'] == "head")
-				{
-					item_slot = "투구";
-				}
-				else if(item_info['equip_slot'] == "u_body")
-				{
-					item_slot = "갑옷";
-				}
-				else if(item_info['equip_slot'] == "l_body")
-				{
-					item_slot = "바지";
-				}
-				else if(item_info['equip_slot'] == "a_hands")
-				{
-					item_slot = "장갑";
-				}
-				else if(item_info['equip_slot'] == "foot")
-				{
-					item_slot = "신발";
-				}
-				else if(item_info['equip_slot'] == "w_hands")
-				{
-					item_slot = "무기";
-				}
-				item_effect += "</li>";
-				if(target == player) $(".player_inventory .inventory_list").append('<div class="inventory_item"><a href="#" class="select_item" id="item_'+i+'"><div class="inventory_image"><img src="'+item_image+'"></div></a></div><div class="item_detail hide"><div class="item_header"><div class="item_name">'+item_name+'</div><div class="item_slot">'+item_slot+'</div></div><div class="item_content"><div class="h_line"></div><div class="item_desc">'+item_desc+'</div><div class="h_line"></div><div class="item_effect"><ul><div class="item_duration">'+item_duration+"</div>"+item_effect+'</ul></div></div></div></div>');
-				else $(".active_unit_inventory .inventory_list").append('<div class="inventory_item"><a href="#" class="select_item" id="item_'+i+'"><div class="inventory_image"><img src="'+item_image+'"></div></a></div><div class="item_detail hide"><div class="item_header"><div class="item_name">'+item_name+'</div><div class="item_slot">'+item_slot+'</div></div><div class="item_content"><div class="h_line"></div><div class="item_desc">'+item_desc+'</div><div class="h_line"></div><div class="item_effect"><ul><div class="item_duration">'+item_duration+"</div>"+item_effect+'</ul></div></div></div></div>');
-				for(var slot in target.equip_slot)
-				{
-					if(slot == "w_hands")
-					{
-						if(target.equip_slot[slot][0] == i && target.equip_slot[slot][1] == i)
+						var item_id;
+						for(var val in player.inventory)
 						{
-							if(target == player) $(".player_inventory .select_item#item_"+i).parent().addClass("equipped");
-							else $(".active_unit_inventory .select_item#item_"+i).parent().addClass("equipped");
+							if(player.inventory[val] == quests_info['in_progress_quest'][quest_id]['complete_condition'][i]['condition']['item'])
+							{
+								item_id = val;
+								break;
+							}
 						}
+						delItem(player, item_id);
 					}
-					else if(target.equip_slot[slot] == i)
+					else if(quests_info['in_progress_quest'][quest_id]['complete_condition'][i]['event'] == quest_complete_condition['give_money'])
 					{
-						if(target == player) $(".player_inventory .select_item#item_"+i).parent().addClass("equipped");
-						else $(".active_unit_inventory .select_item#item_"+i).parent().addClass("equipped");
+						player.money -= quests_info['in_progress_quest'][quest_id]['complete_condition'][i]['condition']['money']
 					}
 				}
+				for(var val in quests_info['in_progress_quest'][quest_id]['reward'])
+				{
+					if(val == "exp")
+					{
+						gainExpPlayer(parseInt(quests_info['in_progress_quest'][quest_id]['reward'][val]));
+					}
+					else if(val == "money")
+					{
+						player.money += parseInt(quests_info['in_progress_quest'][quest_id]['reward'][val]);
+					}
+				}
+				reload(player);
+				if(quests_info['complete_quest'][quest_id] === undefined) quests_info['complete_quest'][quest_id] = {};
+				for(var val in quests_info['in_progress_quest'][quest_id])
+				{
+					quests_info['complete_quest'][quest_id][val] = quests_info['in_progress_quest'][quest_id][val];
+				}
+				delete quests_info['in_progress_quest'][quest_id];
+				$('.quest_list > ul.in_progress_quest > li#quest_'+quest_id).remove();
+				$('.quest_list > ul.complete_quest').append("<li class='select_quest' id='quest_"+quest_id+"'>[완료]"+quests_info['complete_quest'][quest_id]['name']+"</li>")
 			}
-			$("body").on({
-			mouseenter : function(event)
+			$("body").on("click", ".select_quest", function()
 			{
-				$(".effect_detail").removeClass("hide");
-				$(".effect_detail").css("top", $(this).offset().top+$(this).height()+2);
-				$(".effect_detail").css("left", $(this).offset().left-8);
-				$(".effect_detail").css("width", $(this).width());
-				$(".effect_intensity").html(getEffectInfo(player.magic_effect[$(this).attr("id")]));
-				$(".effect_detail").css("z-index", "1");
-			},
-			mouseleave : function(event)
-			{
-				//$(".effect_detail_line").addClass("hide");
-				$(".effect_detail").addClass("hide");
-			}}, ".player_effect > ul li");
-			/*$("#player_inventory").click(function(event)
-			{
-				reloadInventory(player);
-			});*/
-			/*$("#active_unit_inventory").click(function(event)
-			{
-				reloadInventory(active_unit);
-			});*/
+				var quest_info = quests_info[$(this).parents("ul").attr("class")][$(this).attr("id").split("_")[1]];
+				$(".quest_name").text(quest_info['name']);
+				$(".quest_desc").text(quest_info['desc']);
+				//$(".quest_name").text(quest_info['name']);
+				//$(".quest_name").text(quest_info['name']);
+			});
 			// SAVE LOAD STARTGAME
 			/*$('#startgamebt').click(function()
 			{
@@ -646,15 +459,16 @@
 				player.char_name = "asdf";
 				$('.player_list').append(player['char_name']+" <span id='hp'>"+player['hp']+"</span>/<span id='max_hp'>"+player['max_hp']+"</span>");
 				$(".startgame").addClass("hide");
-				//$(".select_follower")[0].click();
 				giveItem(player, 0);
 				giveItem(player, 1);
 				giveItem(player, 2, 2);
-				giveItem(player, 3,10);
+				giveItem(player, 3, 1);
 				giveItem(player, 4);
 				giveItem(player, 5);
 				reload(player);
+				addQuest(1);
 				moveLocation(0);
+				$("#explore").click();
 				if(active_unit.sp > 0) $(".inc_stat").removeClass("hide");
 				//$("#test").click();
 			});

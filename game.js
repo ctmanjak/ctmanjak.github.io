@@ -1,47 +1,384 @@
-$(".control_category a").hover(function(event)
+var Character = function()
 {
-	$("li", this).css("font-weight", "bold");
+	var char_name;
+	var type;
+	var bat;
+	var hp, max_hp, total_hp;
+	var mp, max_mp, total_mp;
+	var ad, total_ad;
+	var as, total_as;
+	var ms, total_ms;
+	var armor, total_armor;
+	var resist, total_resist;
+	var level;
+	var stat_str, stat_agi, stat_int, stat_end;
+	var total_str, total_agi, total_int, total_end;
+	var magic_effect;
+	var equip_slot;
+	var inventory;
+	var money;
+	var carry_weight;
+}
+var Player = function()
+{
+	var lvlup_exp;
+	var exp_level, exp_str, exp_agi, exp_int, exp_end;
+	var sp;
+	var cur_location;
+	var move_location;
+	var cur_state;
+	var quest_state;
+	
+	Character.call(this);
+}
+var Npc = function()
+{
+	var relation;
+	var exp_gain;
+	var gold;
+	var personality;
+	var id;
+
+	Character.call(this);
+}
+var item_type = {consume:1, equip:2, etc:3};
+var Item = function()
+{
+	var id;
+	var type;
+	var name;
+	var desc;
+	var value;
+	var weight;
+	var magic_effect;
+}
+Player.prototype = Character;
+Player.prototype.constructor = Player;
+Player.prototype.createPlayer = function()
+{
+	this.type="player";
+	this.bat = 1.7;
+	this.hp = 125;
+	this.max_hp = 125;
+	this.mp = 75;
+	this.max_mp = 75;
+	this.ad = 40;
+	this.as = 40;
+	this.ms = 100;
+	this.armor = 25;
+	this.resist = 25;
+	this.level = 1;
+	this.stat_str = 10;
+	this.stat_agi = 10;
+	this.stat_int = 10;
+	this.stat_end = 10;
+	this.sp = 3;
+	$.ajax({
+		url:"exp_table.json",
+		dataType:"json",
+		type:"get",
+		context:this,
+		async:false,
+		success:function(result)
+		{
+			this.lvlup_exp = result[this.level+1];
+		}
+	});
+	this.exp_level = 0;
+	this.exp_str = 0;
+	this.exp_agi = 0;
+	this.exp_int = 0;
+	this.exp_end = 0;
+	this.carry_weight = 100;
+	this.cur_location = 0;
+	this.cur_state = 0;
+	this.money = 0;
+	this.ad += this.stat_str*1;
+	this.carry_weight += this.stat_str*1;
+	this.as += this.stat_agi*1;
+	this.ms += this.stat_agi*1;
+	this.mp += this.stat_int*1;
+	this.hp += this.stat_end*2;
+	this.max_hp = this.hp;
+	this.max_mp = this.mp;
+	this.equip_slot = {head:"none", u_body:"none", l_body:"none", a_hands:"none", foot:"none", w_hands:["none", "none"]};
+	this.magic_effect = {};
+	this.inventory = {};
+	this.quest_state = {in_progress:[], complete:[]};
+	this.base_hp = this.hp;
+	this.base_mp = this.mp;
+	this.base_ad = this.ad;
+	this.base_as = this.as;
+	this.base_ms = this.ms;
+	this.base_armor = this.armor;
+	this.base_resist = this.resist;
+	this.base_str = this.stat_str;
+	this.base_agi = this.stat_agi;
+	this.base_int = this.stat_int;
+	this.base_end = this.stat_end;
+}
+Player.prototype.levelUp = function(exp, num, stat)
+{
+	var stat = stat || 'level';
+	if(stat=='level') 
+	{
+		this[stat]+=num;
+		this.sp+=3*num;
+	}
+	else this["stat_"+stat]+=num;
+	this["exp_"+stat] = exp;
+	if(this == active_unit) 
+	{
+		reload(this, 'level');
+		reload(this, 'sp');
+	}
+}
+Player.prototype.gainExp = function(exp, stat)
+{
+	var stat = stat || 'level';
+	this["exp_"+stat] += exp;
+	$.ajax({
+		url:"exp_table.json",
+		dataType:"json",
+		type:"get",
+		context:this,
+		success:function(result)
+		{
+			var i;
+			for(i=0, total = result[i+2]; this["exp_"+stat] >= result[i+2]; this["exp_"+stat]-=result[i+2], i++){}
+			this["lvlup_exp"] = result[i+2];
+			if(this == active_unit) 
+			{
+				reload(this, 'exp_'+stat);
+				reload(this, 'lvlup_exp');
+			}
+			this.levelUp(this["exp_"+stat], i, stat);
+		}
+	});
+}
+Player.prototype.moveLocation = function(id)
+{
+	$.ajax({
+		url:"location.json",
+		dataType:"json",
+		type:"get",
+		context:this,
+		async:false,
+		success:function(result)
+		{
+			if(result[id] === undefined) result[id] = {};
+			if(result[id]['magic_effect'] === undefined) result[id]['magic_effect'] = {};
+			var magic_effect = result[id]['magic_effect']['name'];
+			if(magic_effect != "nothing") this.magic_effect[magic_effect] = result[id]['magic_effect']['data'];
+			this.cur_location = result[id];
+		}
+	});
+}
+Npc.prototype = Character;
+Npc.prototype.constructor = Npc;
+Npc.prototype.createNpc = function(npc)
+{
+	this.type = "npc";
+	this.carry_weight = 100;
+	this.relation=0;
+	this.bat = 2.0;
+	this.max_hp = Math.floor(Math.random()*50+100);
+	this.max_mp = Math.floor(Math.random()*50+50);
+	this.ad = Math.floor(Math.random()*20+30);
+	this.as = Math.floor(Math.random()*20+30);
+	this.ms = Math.floor(Math.random()*20+90);
+	this.armor = Math.floor(Math.random()*10+20);
+	this.resist = Math.floor(Math.random()*10+20);
+	this.personality = Math.floor(Math.random()*3+1);
+	this.stat_str = 0;
+	this.stat_agi = 0;
+	this.stat_int = 0;
+	this.stat_end = 0;
+	for(var val in npc)
+	{
+		if(val != "id" || val != "level" || val != "char_name" || val != "inventory" || val != "equip_slot" || val != "quest") this[val] = parseInt(npc[val]);
+	}
+	this.equip_slot = {head:"none", u_body:"none", l_body:"none", a_hands:"none", foot:"none", w_hands:["none", "none"]};
+	this.magic_effect = {};
+	this.inventory = {};
+	this.quest = [];
+	this.char_name = npc.char_name;
+	if(npc === undefined) npc = {};
+	this.ad += this.stat_str*1;
+	this.as += this.stat_agi*1;
+	this.ms += this.stat_agi*1;
+	this.max_mp += this.stat_int*1;
+	this.max_hp += this.stat_end*2;
+	this.hp = this.max_hp;
+	this.mp = this.max_mp;
+	this.base_hp = this.max_hp;
+	this.base_mp = this.max_mp;
+	this.base_ad = this.ad;
+	this.base_as = this.as;
+	this.base_ms = this.ms;
+	this.base_armor = this.armor;
+	this.base_resist = this.resist;
+	this.base_str = this.stat_str;
+	this.base_agi = this.stat_agi;
+	this.base_int = this.stat_int;
+	this.base_end = this.stat_end;
+	active_unit_inventory = {};
+	for(var i = 0; i < npc['quest'].length; i++)
+	{
+		this.quest.push(npc['quest'][i]);
+	}
+	for(var i = 0; i < npc['inventory'].length; i++)
+	{
+		giveItem(this, npc['inventory'][i]);
+	}
+	addMagicEffect(this, {name:cur_location_info['name'],effect_name:"location_"+cur_location_info['id'], duration:"passive", effect:cur_location_info['location_effect']});
+	for(var i = 0; i < npc['equip_slot'].length; i++)
+	{
+		equipItem(this, npc['equip_slot'][i]);
+	}
+}
+Npc.prototype.createMonster = function(npc)
+{
+	this.type = "npc";
+	/*$.ajax({
+	url:"defname.json",
+	async:false,
+	dataType:"json",
+	type:"get",
+	context:this,
+	success:function(result)
+	{
+		this.npc_name = result['defname'][Math.floor(Math.random()*result['defname'].length)];
+	}
+	});*/
+	this.carry_weight = 100;
+	this.relation=0;
+	this.bat = 2.0;
+	this.max_hp = Math.floor(Math.random()*50+100);
+	this.max_mp = Math.floor(Math.random()*50+50);
+	this.ad = Math.floor(Math.random()*20+30);
+	this.as = Math.floor(Math.random()*20+30);
+	this.ms = Math.floor(Math.random()*20+90);
+	this.armor = Math.floor(Math.random()*10+20);
+	this.resist = Math.floor(Math.random()*10+20);
+	this.personality = Math.floor(Math.random()*3+1);
+	this.stat_str = 0;
+	this.stat_agi = 0;
+	this.stat_int = 0;
+	this.stat_end = 0;
+	for(var val in npc)
+	{
+		if(val != "id" || val != "level" || val != "char_name" || val != "inventory" || val != "equip_slot") this[val] = parseInt(npc[val]);
+	}
+	this.equip_slot = {head:"none", u_body:"none", l_body:"none", a_hands:"none", foot:"none", w_hands:["none", "none"]};
+	this.magic_effect = {};
+	this.inventory = {};
+	this.char_name = npc.char_name;
+	if(npc === undefined) npc = {};
+	var level = npc['level'];
+	var random_level = Math.floor(Math.random()*(11)-5);
+	this.level += Math.floor(Math.random()*random_level);
+	if(this.level <= 0) this.level = 1;
+	var sp = this.level*3;
+	var limit_stat;
+	if(sp < 4) limit_stat = 1;
+	else limit_stat = Math.floor(sp/4);
+	var random_limit = Math.floor(Math.random()*limit_stat);
+	var stat = [];
+	for(var i=0; i < 4; i++)
+	{
+		if(i == 3) stat[i] = sp;
+		else stat[i] = Math.floor(Math.random()*(this.level+1)+1);
+		if(sp-stat[i] < 0) stat[i] = 0;
+		sp -= stat[i];
+	}
+	for(var i=0, tmp, a, b; i < 4; i++)
+	{
+		a = Math.floor(Math.random()*4);
+		b = Math.floor(Math.random()*4);
+		tmp = stat[a];
+		stat[a] = stat[b];
+		stat[b] = tmp;
+	}
+	this.stat_str += stat[0];
+	this.stat_agi += stat[1];
+	this.stat_int += stat[2];
+	this.stat_end += stat[3];
+	this.ad += this.stat_str*1;
+	this.as += this.stat_agi*1;
+	this.ms += this.stat_agi*1;
+	this.max_mp += this.stat_int*1;
+	this.max_hp += this.stat_end*2;
+	this.hp = this.max_hp;
+	this.mp = this.max_mp;
+	this.base_hp = this.max_hp;
+	this.base_mp = this.max_mp;
+	this.base_ad = this.ad;
+	this.base_as = this.as;
+	this.base_ms = this.ms;
+	this.base_armor = this.armor;
+	this.base_resist = this.resist;
+	this.base_str = this.stat_str;
+	this.base_agi = this.stat_agi;
+	this.base_int = this.stat_int;
+	this.base_end = this.stat_end;
+	active_unit_inventory = {};
+	if(npc['inventory'] === undefined) npc['inventory'] = [];
+	for(var i = 0; i < npc['inventory'].length; i++)
+	{
+		giveItem(this, npc['inventory'][i]);
+	}
+	addMagicEffect(this, {name:cur_location_info['name'],effect_name:"location_"+cur_location_info['id'], duration:"passive", effect:cur_location_info['location_effect']});
+	if(npc['equip_slot'] === undefined) npc['equip_slot'] = [];
+	for(var i = 0; i < npc['equip_slot'].length; i++)
+	{
+		equipItem(this, npc['equip_slot'][i]);
+	}
+}
+$(".control_category li").hover(function(event)
+{
+	$(this).css("font-weight", "bold");
 },function()
 {
-	if(!$("li", this).hasClass("active")) $("li", this).css("font-weight", "normal");
+	if(!$(this).hasClass("active")) $(this).css("font-weight", "normal");
 });
-$(".control_category a").click(function(event)
+$(".control_category li").click(function(event)
 {
 	event.preventDefault();
 	$(".control_category li").css("font-weight", "normal");
 	$(".control_category li").removeClass("active");
-	$("li", this).css("font-weight", "bold");
-	$("li", this).addClass("active");
+	$(this).css("font-weight", "bold");
+	$(this).addClass("active");
 	$(".controlscreen").children().addClass("hide");
-	$("."+$("li", this).parent().attr("id")).removeClass("hide");
+	$("."+$(this).attr("id")).removeClass("hide");
 });
-$(".location_category a").hover(function(event)
+$(".location_category li").hover(function(event)
 {
-	$("li", this).css("font-weight", "bold");
+	$(this).css("font-weight", "bold");
 },function()
 {
-	if(!$("li", this).hasClass("active")) $("li", this).css("font-weight", "normal");
+	if(!$(this).hasClass("active")) $(this).css("font-weight", "normal");
 });
-$(".location_category a").click(function(event)
+$(".location_category li").click(function(event)
 {
 	event.preventDefault();
 	$(".location_category li").css("font-weight", "normal");
 	$(".location_category li").removeClass("active");
-	$("li", this).css("font-weight", "bold");
-	$("li", this).addClass("active");
+	$(this).css("font-weight", "bold");
+	$(this).addClass("active");
 	$(".location_list ul").empty();
-	if($("li", this).parent().attr("id") == "move_location")
+	if($(this).attr("id") == "move_location")
 	{
 		for(var i = 0; i < move_locations.length; i++)
 		{
-			if(move_locations[i]['type'] == "town") $(".location_list > ul").append("<a href='#' class='move_location' id='"+move_locations[i]['id']+"'><li style='background-image:url(\"bg/"+move_locations[i]['bg']+"\");background-size:auto 100%'>"+move_locations[i]['name']+"</li></a>");
+			if(move_locations[i]['type'] == "town") $(".location_list > ul").append("<li id='"+move_locations[i]['id']+"' style='background-image:url(\"bg/"+move_locations[i]['bg']+"\");background-size:auto 100%'>"+move_locations[i]['name']+"</li>");
 			else
 			{
 				var cur_level = parseInt(move_locations[i]['level'])
 				var min_level = cur_level-3 < 1? 1:cur_level-3;
 				var max_level = cur_level+3;
 				var string_level = min_level+"~"+max_level;
-				$(".location_list > ul").append("<a href='#' class='move_location' id='"+move_locations[i]['id']+"'><li style='background-image:url(\"bg/"+move_locations[i]['bg']+"\");background-size:auto 100%'>"+move_locations[i]['name']+" <span style='font-size:0.7em'>레벨대 : "+string_level+"</span></li></a>");
+				$(".location_list > ul").append("<li id='"+move_locations[i]['id']+"' style='background-image:url(\"bg/"+move_locations[i]['bg']+"\");background-size:auto 100%'>"+move_locations[i]['name']+" <span style='font-size:0.7em'>레벨대 : "+string_level+"</span></li>");
 			}
 		}
 	}
@@ -49,41 +386,43 @@ $(".location_category a").click(function(event)
 	{
 		for(var i = 0; i < sub_locations.length; i++)
 		{
-			if(sub_locations[i]['type'] == "town") $(".location_list > ul").append("<a href='#' class='move_location' id='"+sub_locations[i]['id']+"'><li style='background-image:url(\"bg/"+sub_locations[i]['bg']+"\");background-size:auto 100%'>"+sub_locations[i]['name']+"</li></a>");
+			if(sub_locations[i]['type'] == "town") $(".location_list > ul").append("<li id='"+sub_locations[i]['id']+"' style='background-image:url(\"bg/"+sub_locations[i]['bg']+"\");background-size:auto 100%'>"+sub_locations[i]['name']+"</li>");
 			else 
 			{
 				var cur_level = parseInt(move_locations[i]['level'])
 				var min_level = cur_level-3 < 1? 1:cur_level-3;
 				var max_level = cur_level+3;
 				var string_level = min_level+"~"+max_level;
-				$(".location_list > ul").append("<a href='#' class='move_location' id='"+sub_locations[i]['id']+"'><li style='background-image:url(\"bg/"+sub_locations[i]['bg']+"\");background-size:auto 100%'>"+sub_locations[i]['name']+" <span style='font-size:0.7em'>레벨대 : "+string_level+"</span></li></a>");
+				$(".location_list > ul").append("<li id='"+sub_locations[i]['id']+"' style='background-image:url(\"bg/"+sub_locations[i]['bg']+"\");background-size:auto 100%'>"+sub_locations[i]['name']+" <span style='font-size:0.7em'>레벨대 : "+string_level+"</span></li>");
 			}
 		}
 	}
 	
 });
 var state = {dead:0, idle:1, encounter:2, combat:3, explore:4};
-var magic_effect_id = {heal:0x1, stun:0x2, silence:0x4, binding:0x8, invisible:0x10, bleeding:0x20, resistance:0x40, debuff:0x80, buff:0x100, damage:0x200};
-var magic_effect = {heal:{id:0x1, amount:0}};
-var heal_effect = {id:0x1, amount:0};
-var damage_effect = {id:0x200, amount:0};
+var magic_effect_id = {heal:1, stun:2, silence:3, binding:4, invisible:5, bleeding:6, resistance:7, debuff:8, buff:9, damage:10};
+var magic_effect = {heal:{id:1, amount:0}};
+var heal_effect = {id:1, amount:0};
+var damage_effect = {id:10, amount:0};
 var personality = {good:1, neutral:2, bad:3};
 var player;
 var followers = {};
 var npcs = {};
 var active_unit = {};
 var npcs_info = [];
+var monsters_info = [];
 var player_location = 1;
 var npc_all_dead = 0;
 var follower_all_dead = 0;
 var combat_players = [];
 var combat_npcs = [];
 var cur_location = 0;
+var cur_location_info = {};
 var cur_state = state['idle'];
 var move_locations = [];
 var sub_locations = [];
 var main_location = {};
-$('body').on("click", ".move_location", function(event)
+$('body').on("click", ".location_list li", function(event)
 {
 	event.preventDefault();
 	moveLocation($(this).attr("id"));
@@ -99,33 +438,31 @@ var reloadListAll = function(target)
 	var target = target || "all";
 	if(target == "all")
 	{
-		$('.player_list').empty();
-		$('.npc_list').empty();
-		$('.player_list > ul').append("<a href='#' class='select_follower' id='player'><li id='player'>"+player['char_name']+" <span id='hp'>"+player['hp']+"</span>/<span id='max_hp'>"+player['max_hp']+"</span></li></a>");
-		for(var i = 0; i < followers.length; i++)
+		$('.npc_list > ul').empty();
+		$('.follower_list > ul').empty();
+		for(var i = 0; i < Object.keys(followers).length; i++)
 		{
-			$('.player_list > ul').append("<a href='#' class='select_follower'><li id='player_"+i+"'>"+followers[i]['char_name']+" <span id='hp'>"+followers[i]['hp']+"</span>/<span id='max_hp'>"+followers[i]['max_hp']+"</span></li></a>");
+			$('.follower_list > ul').append("<li class='select_follower' id='player_"+i+"'>"+followers[i]['char_name']+" <span id='hp'>"+followers[i]['hp']+"</span>/<span id='max_hp'>"+followers[i]['max_hp']+"</span></li>");
 		}
-		for(var i = 0; i < npcs.length; i++)
+		for(var i = 0; i < Object.keys(npcs).length; i++)
 		{
-			$('.npc_list > ul').append("<a href='#' class='select_npc'><li id='npc_"+i+"'>"+npcs[i]['char_name']+" <span id='hp'>"+npcs[i]['hp']+"</span>/<span id='max_hp'>"+npcs[i]['max_hp']+"</span></li></a>");
+			$('.npc_list > ul').append("<li class='select_npc' id='npc_"+i+"'>"+npcs[i]['char_name']+" <span id='hp'>"+npcs[i]['hp']+"</span>/<span id='max_hp'>"+npcs[i]['max_hp']+"</span></li>");
 		}
 	}
 	else if(target == "follower")
 	{
-		$('.player_list ul').empty();
-		$('.player_list > ul').append("<a href='#' class='select_follower' id='player'><li id='player'>"+player['char_name']+" <span id='hp'>"+player['hp']+"</span>/<span id='max_hp'>"+player['max_hp']+"</span></li></a>");
-		for(var i = 0; i < followers.length; i++)
+		$('.follower_list ul').empty();
+		for(var i = 0; i < Object.keys(followers).length; i++)
 		{
-			$('.player_list > ul').append("<a href='#' class='select_follower'><li id='player_"+i+"'>"+followers[i]['char_name']+" <span id='hp'>"+followers[i]['hp']+"</span>/<span id='max_hp'>"+followers[i]['max_hp']+"</span></li></a>");
+			$('.follower_list > ul').append("<li class='select_follower' id='player_"+i+"'>"+followers[i]['char_name']+" <span id='hp'>"+followers[i]['hp']+"</span>/<span id='max_hp'>"+followers[i]['max_hp']+"</span></li>");
 		}
 	}
 	else if(target == "npc")
 	{
 		$('.npc_list ul').empty();
-		for(var i = 0; i < npcs.length; i++)
+		for(var i = 0; i < Object.keys(npcs).length; i++)
 		{
-			$('.npc_list > ul').append("<a href='#' class='select_npc'><li id='npc_"+i+"'>"+npcs[i]['char_name']+" <span id='hp'>"+npcs[i]['hp']+"</span>/<span id='max_hp'>"+npcs[i]['max_hp']+"</span></li></a>");
+			$('.npc_list > ul').append("<li class='select_npc' id='npc_"+i+"'>"+npcs[i]['char_name']+" <span id='hp'>"+npcs[i]['hp']+"</span>/<span id='max_hp'>"+npcs[i]['max_hp']+"</span></li></a>");
 		}
 	}
 }
@@ -133,7 +470,7 @@ var reloadList = function(target)
 {
 	if(target.type == "follower")
 	{
-		for(var i = 0; i < followers.length; i++)
+		for(var i = 0; i < Object.keys(followers).length; i++)
 		{
 			if(followers[i] == target)
 			{
@@ -146,7 +483,7 @@ var reloadList = function(target)
 	}
 	else if(target.type == "npc")
 	{
-		for(var i = 0; i < npcs.length; i++)
+		for(var i = 0; i < Object.keys(npcs).length; i++)
 		{
 			if(npcs[i] == target)
 			{
@@ -209,12 +546,12 @@ $('#attack').click(function(event)
 	if(cur_state == state['encounter'])
 	{
 		//if(confirm("정말 공격하시겠습니까? 대상 : "+active_unit['char_name']) != 1) return;
-		for(var i = 0; i < followers.length; i++)
+		for(var i = 0; i < Object.keys(followers).length; i++)
 		{
 			combat_players.push(followers[i]);
 		}
 		combat_players.push(player);
-		for(var i = 0; i < npcs.length; i++)
+		for(var i = 0; i < Object.keys(npcs).length; i++)
 		{
 			combat_npcs.push(npcs[i]);
 		}
@@ -238,11 +575,11 @@ $('#attack').click(function(event)
 		reloadList(active_unit);
 		if(active_unit.hp <= 0)
 		{
-			for(var i = 0; i < combat_npcs.length; i++)
+			for(var i = 0; i < combat_Object.keys(npcs).length; i++)
 			{
 				if(combat_npcs[i] === active_unit)
 				{
-					if(i >= combat_npcs.length-1)
+					if(i >= combat_Object.keys(npcs).length-1)
 					{
 						npc_all_dead = 1;
 					}
@@ -350,9 +687,10 @@ var progressCombat = function(combat_players, combat_npcs)
 }
 var gainExpPlayer = function(exp)
 {
-	var increase_exp = followers.length * 0.15;
-	var gain_exp = Math.floor((exp*(1+increase_exp))/(followers.length+1));
-	for(var i = 0; i < followers.length; i++)
+	if(followers === undefined) followers = {};
+	var increase_exp = Object.keys(followers).length * 0.15;
+	var gain_exp = Math.floor((exp*(1+increase_exp))/(Object.keys(followers).length+1));
+	for(var i = 0; i < Object.keys(followers).length; i++)
 	{
 		followers[i].gainExp(gain_exp);
 	}
@@ -402,7 +740,7 @@ var addCharList = function(target)
 		id = Object.keys(npcs).length;
 		npcs[id] = target;
 	}
-	$('.'+target.type+'_list > ul').append("<a href='#' class='select_"+target.type+"'><li id='"+target.type+"_"+id+"'>"+target['char_name']+" <span id='hp'>"+target['hp']+"</span>/<span id='max_hp'>"+target['max_hp']+"</span></li></a>");
+	$('.'+target.type+'_list > ul').append("<li class='select_"+target.type+"' id='"+target.type+"_"+id+"' style='background:#fff'>"+target['char_name']+" <span id='hp'>"+target['hp']+"</span>/<span id='max_hp'>"+target['max_hp']+"</span></li>");
 }
 var delCharList = function(target)
 {
@@ -429,13 +767,23 @@ var delCharList = function(target)
 		}
 	}
 }
-var createNpc = function(num)
+var createMonster = function(num)
 {
 	for(var i=0, npc, select_npc; i < num; i++)
 	{
 		npc=new Npc();
-		select_npc = npcs_info[Math.floor(Math.random()*npcs_info.length)];
-		npc.createRandom(select_npc);
+		select_npc = monsters_info[Math.floor(Math.random()*monsters_info.length)];
+		npc.createMonster(select_npc);
+		addCharList(npc);
+	}
+}
+var createNpc = function(group)
+{
+	for(var i=0, npc, select_npc; i < npcs_info[group].length; i++)
+	{
+		npc=new Npc();
+		select_npc = npcs_info[group][i];
+		npc.createNpc(select_npc);
 		addCharList(npc);
 	}
 }
@@ -498,10 +846,11 @@ $('.inc_stat > input[type=button]').click(function(event)
 $('body').on('click', '.select_npc', function(event)
 {
 	event.preventDefault();
+	finishDialogue();
 	$('.select_follower').removeClass("active");
 	$('.select_npc').removeClass("active");
 	$(this).addClass("active");
-	active_unit = npcs[$("li", this).attr("id").split("_")[1]];
+	active_unit = npcs[$(this).attr("id").split("_")[1]];
 	reloadEffectlist(active_unit);
 	reloadInventory(active_unit);
 	reload(active_unit);
@@ -509,11 +858,11 @@ $('body').on('click', '.select_npc', function(event)
 $('body').on('click', '.select_follower', function(event)
 {
 	event.preventDefault();
+	finishDialogue();
 	$('.select_follower').removeClass("active");
 	$('.select_npc').removeClass("active");
 	$(this).addClass("active");
-	if($(this).attr("id") == "player") active_unit = player;
-	else active_unit = followers[$("li", this).attr("id").split("_")[1]];
+	active_unit = followers[$(this).attr("id").split("_")[1]];
 	reloadEffectlist(active_unit);
 	reloadInventory(active_unit);
 	reload(active_unit);
@@ -525,7 +874,7 @@ $('#save').click(function(event)
 	//localStorage.save_data = "";
 	if(save_data['follower'] === undefined) save_data['follower'] ={};
 	if(save_data['npc'] === undefined) save_data['npc'] ={};
-	for(var i= 0; i < followers.length; i++)
+	for(var i= 0; i < Object.keys(followers).length; i++)
 	{
 		for(var data in followers[i])
 		{
@@ -535,7 +884,7 @@ $('#save').click(function(event)
 			save_data['follower'][i][data] = followers[i][data];
 		}
 	}
-	for(var i= 0; i < npcs.length; i++)
+	for(var i= 0; i < Object.keys(npcs).length; i++)
 	{
 		for(var data in npcs[i])
 		{
@@ -567,7 +916,7 @@ $('#load').click(function(event)
 		player[stat] = load_data['player'][stat];
 	}
 	reload(player);
-	for(var i = followers.length-1; i >= 0; i--)
+	for(var i = Object.keys(followers).length-1; i >= 0; i--)
 	{
 		delCharList(followers[i]);
 	}
@@ -587,7 +936,7 @@ $('#load').click(function(event)
 		temp['sp'] = load_data['follower'][follower]['sp'];
 		addCharList(temp);
 	}
-	for(var i = npcs.length-1; i >= 0; i--)
+	for(var i = Object.keys(npcs).length-1; i >= 0; i--)
 	{
 		delCharList(npcs[i]);
 	}
@@ -633,24 +982,24 @@ $('#explore').click(function(event)
 				var pos_x =parseInt(bg_pos[0])-500;
 				$('#movebg').html("@keyframes movebg{0%{background-position:"+bg_pos[0]+"px}100%{background-position:"+pos_x+"px;}}");
 			}
-			var encounter_chance = Math.floor(Math.random()*5+1);
+			var encounter_chance = Math.floor(Math.random()*1+1);
 			npcs = [];
 			$('.npc_list > ul').empty();
 			if(encounter_chance == 1)
 			{
-				createNpc(10);
+				createNpc(0);
 				cur_state = state['encounter'];
 				$(".select_npc")[0].click();
 			}
 			else if(encounter_chance == 2)
 			{
-				createNpc(10);
+				createMonster(1);
 				cur_state = state['encounter'];
 				$(".select_npc")[0].click();
 			}
 			else if(encounter_chance == 3)
 			{
-				createNpc(10);
+				createMonster(2);
 				cur_state = state['encounter'];
 				$(".select_npc")[0].click();
 			}
@@ -666,33 +1015,41 @@ $("#main_location").click(function(event)
 var moveLocation = function(id)
 {
 	var npc_id = [];
+	var monster_id = [];
 	var location;
 	var check_sub = 0;
 	npcs_info = [];
+	monsters_info = [];
 	move_locations = [];
 	//sub_locations = [];
 	//main_location = {};
-	for(var i = npcs.length-1; i >= 0; i--)
+	for(var i = Object.keys(npcs).length-1; i >= 0; i--)
 	{
 		delCharList(npcs[i]);
 	}
+	for(var j = 0; j < Object.keys(followers).length; j++)
+	{
+		delMagicEffect(followers[j], "location_"+cur_location);
+	}
+	delMagicEffect(player, "location_"+cur_location);
+	
 	reloadListAll("npc");
 	$.ajax({
 		url:"location.json",
 		dataType:"json",
-		type:"get",
+		type:"post",
 		async:false,
 		success:function(result)
 		{
-			location = result[id];
+			cur_location_info = location = result[id];
 			var location_effects = location['location_effect'];
 			if(location_effects[0]['id'] != 0)
 			{
-				for(var j = 0; j < followers.length; j++)
+				for(var j = 0; j < Object.keys(followers).length; j++)
 				{
-					addMagicEffect(followers[j], {duration:"passive", effect:location_effects});
+					addMagicEffect(followers[j], {name:location['name'],effect_name:"location_"+id, duration:"passive", effect:location_effects});
 				}
-				addMagicEffect(player, {duration:"passive", effect:location_effects});
+				addMagicEffect(player, {name:location['name'],effect_name:"location_"+id, duration:"passive", effect:location_effects});
 			}
 			cur_location = location['id'];
 			for(var i = 0; i < sub_locations.length; i++)
@@ -704,7 +1061,7 @@ var moveLocation = function(id)
 				}
 			}
 			sub_locations = [];
-			if(check_sub != 1)main_location = location;
+			if(check_sub != 1) main_location = location;
 			if(location['sub_location'] === undefined) location['sub_location'] = {};
 			for(var i = 0; i < location['sub_location'].length; i++)
 			{
@@ -715,30 +1072,49 @@ var moveLocation = function(id)
 			{
 				move_locations.push(result[location['move_location'][i]]);
 			}
-			npc_id = location['encounter_id'];
+			npc_id = location['encounter_id']['npc'];
+			monster_id = location['encounter_id']['monster'];
 		}
 	});
-		$.ajax({
+	$.ajax({
 		url:"npc.json",
 		dataType:"json",
-		type:"get",
+		type:"post",
 		async:false,
 		success:function(result)
 		{
-			if(npc_id === undefined) npc_id = {};
+			if(npc_id === undefined) npc_id = [];
 			for(var i = 0; i < npc_id.length ; i++)
 			{
 				npcs_info.push(result[npc_id[i]]);
 			}
-		}
+		}	
+	});
+	$.ajax({
+		url:"monster.json",
+		dataType:"json",
+		type:"post",
+		async:false,
+		success:function(result)
+		{
+			if(monster_id === undefined) monster_id = [];
+			for(var i = 0; i < monster_id.length ; i++)
+			{
+				monsters_info.push(result[monster_id[i]]);
+			}
+		}	
 	});
 	if(location['type'] == "field")
 	{
 		player_location = 1;
-		$("#move_location").addClass("hide");
+		$("#explore").removeClass("hide");
+		$("#meet").addClass("hide");
+		//$("#move_location").addClass("hide");
 	}
 	else if(location['type'] == "town")
 	{
+		$("#explore").addClass("hide");
+		$("#meet").removeClass("hide");
 		$("#move_location").removeClass("hide");
 	}
 	$(".bgimg").css("background-image", "url('bg/"+location['bg']+"')");
@@ -763,6 +1139,7 @@ var addMagicEffect = function(target, effect)
 		{
 			effect_name = effect['name'] + "_"+i;
 		}
+		if(target.magic_effect[effect_name] === undefined) target.magic_effect[effect_name] = {};
 		target.magic_effect[effect_name]['effect_name'] = effect_name;
 	}
 	if(effect['name'] === undefined) effect['name'] = "";
@@ -980,6 +1357,7 @@ var addMagicEffect = function(target, effect)
 }
 var delMagicEffect = function(target, effect_id)
 {
+	console.log(effect_id);
 	for(var effect in target.magic_effect)
 	{
 		if(effect == effect_id)
@@ -1024,275 +1402,404 @@ var adjustMagicEffect = function(effect, opt)
 		effect[key] = opt[key];
 	}
 }
-var Character = function()
+var inventory_item_info = {};
+var active_unit_inventory = {};
+var reloadEffectlist = function(target)
 {
-	var char_name;
-	var type;
-	var bat;
-	var hp, max_hp, total_hp;
-	var mp, max_mp, total_mp;
-	var ad, total_ad;
-	var as, total_as;
-	var ms, total_ms;
-	var armor, total_armor;
-	var resist, total_resist;
-	var level;
-	var stat_str, stat_agi, stat_int, stat_end;
-	var total_str, total_agi, total_int, total_end;
-	var magic_effect;
-	var equip_slot;
+	$(".npc_effect > ul").empty();
+	for(var effect in target.magic_effect)
+	{
+		addEffectlist(target, target.magic_effect[effect]);
+	}
+}
+var addEffectlist = function(target, effect)
+{
+	if(target != active_unit && target != player) return;
+	var effect_name = effect['effect_name'];
+	var effect_info = "";
+	for(var a = 0; a < effect['effect'].length; a++)
+	{
+		if(effect['effect'][a]['type'] == "ad") effect_info += "공격력";
+		else if(effect['effect'][a]['type'] == "as") effect_info += "공격속도";
+		else if(effect['effect'][a]['type'] == "hp") effect_info += "HP";
+		else if(effect['effect'][a]['type'] == "mp") effect_info += "MP";
+		else if(effect['effect'][a]['type'] == "ms") effect_info += "이동속도";
+		else if(effect['effect'][a]['type'] == "armor") effect_info += "방어력";
+		else if(effect['effect'][a]['type'] == "resist") effect_info += "마법저항력";
+		else if(effect['effect'][a]['type'] == "stat_str") effect_info += "힘";
+		else if(effect['effect'][a]['type'] == "stat_agi") effect_info += "민첩";
+		else if(effect['effect'][a]['type'] == "stat_int") effect_info += "지능";
+		else if(effect['effect'][a]['type'] == "stat_end") effect_info += "인내";
+		if(effect['effect'][a]['id'] == magic_effect_id["buff"])
+		{
+			effect_info += "+";
+		}
+		else if(effect['effect'][a]['id'] == magic_effect_id["debuff"])
+		{
+			effect_info += "-";
+		}
+		effect_info += effect['effect'][a]['intensity']+(effect['effect'][a]['intensity_type']=="percent"?"%<br>":"<br>");
+	}
+	if(effect['duration'] == "passive")
+	{
+		if(target == player) $(".player_effect > ul#passive").append("<li id='"+effect_name+"'>"+effect['name']+"</li>");
+		else $(".npc_effect > ul#passive").append("<li id='"+effect_name+"'>"+effect['name']+"</li>");
+	}
+	else 
+	{
+		if(target == player) $(".player_effect > ul#active").append("<li id='"+effect_name+"'>"+effect['name']+" <span id='duration'>"+effect['duration']+"</span></li>");
+		else $(".npc_effect > ul#active").append("<li id='"+effect_name+"'>"+effect['name']+" <span id='duration'>"+effect['duration']+"</span></li>");
+	}
+}
+var reloadInventory = function(target)
+{
 	var inventory;
-	var money;
-	var carry_weight;
-}
-var Player = function()
-{
-	var lvlup_exp;
-	var exp_level, exp_str, exp_agi, exp_int, exp_end;
-	var sp;
-	var cur_location;
-	var move_location;
-	var cur_state;
-	
-	Character.call(this);
-}
-var Npc = function()
-{
-	var relation;
-	var exp_gain;
-	var gold;
-	var personality;
-	var id;
-
-	Character.call(this);
-}
-var item_type = {consume:1, equip:2, etc:3};
-var Item = function()
-{
-	var id;
-	var type;
-	var name;
-	var desc;
-	var value;
-	var weight;
-	var magic_effect;
-}
-Player.prototype = Character;
-Player.prototype.constructor = Player;
-Player.prototype.createPlayer = function()
-{
-	this.type="player";
-	this.bat = 1.7;
-	this.hp = 125;
-	this.max_hp = 125;
-	this.mp = 75;
-	this.max_mp = 75;
-	this.ad = 40;
-	this.as = 40;
-	this.ms = 100;
-	this.armor = 25;
-	this.resist = 25;
-	this.level = 1;
-	this.stat_str = 10;
-	this.stat_agi = 10;
-	this.stat_int = 10;
-	this.stat_end = 10;
-	this.sp = 3;
+	if(target == player)
+	{
+		inventory = inventory_item_info;
+		$(".player_inventory > .inventory_list").empty();
+	}
+	else
+	{
+		inventory = active_unit_inventory;
+		$(".active_unit_inventory > .inventory_list").empty();
+	}
+	inventory = {};
 	$.ajax({
-		url:"exp_table.json",
+		url:"item.json",
 		dataType:"json",
-		type:"get",
-		context:this,
+		type:"post",
 		async:false,
 		success:function(result)
 		{
-			this.lvlup_exp = result[this.level+1];
-		}
-	});
-	this.exp_level = 0;
-	this.exp_str = 0;
-	this.exp_agi = 0;
-	this.exp_int = 0;
-	this.exp_end = 0;
-	this.carry_weight = 100;
-	this.cur_location = 0;
-	this.cur_state = 0;
-	this.money = 0;
-	this.ad += this.stat_str*1;
-	this.carry_weight += this.stat_str*1;
-	this.as += this.stat_agi*1;
-	this.ms += this.stat_agi*1;
-	this.mp += this.stat_int*1;
-	this.hp += this.stat_end*2;
-	this.max_hp = this.hp;
-	this.max_mp = this.mp;
-	this.equip_slot = {head:"none", u_body:"none", l_body:"none", a_hands:"none", foot:"none", w_hands:["none", "none"]};
-	this.magic_effect = {};
-	this.inventory = {};
-	this.base_hp = this.hp;
-	this.base_mp = this.mp;
-	this.base_ad = this.ad;
-	this.base_as = this.as;
-	this.base_ms = this.ms;
-	this.base_armor = this.armor;
-	this.base_resist = this.resist;
-	this.base_str = this.stat_str;
-	this.base_agi = this.stat_agi;
-	this.base_int = this.stat_int;
-	this.base_end = this.stat_end;
-}
-Player.prototype.levelUp = function(exp, num, stat)
-{
-	var stat = stat || 'level';
-	if(stat=='level') 
-	{
-		this[stat]+=num;
-		this.sp+=3*num;
-	}
-	else this["stat_"+stat]+=num;
-	this["exp_"+stat] = exp;
-	if(this == active_unit) 
-	{
-		reload(this, 'level');
-		reload(this, 'sp');
-	}
-}
-Player.prototype.gainExp = function(exp, stat)
-{
-	var stat = stat || 'level';
-	this["exp_"+stat] += exp;
-	$.ajax({
-		url:"exp_table.json",
-		dataType:"json",
-		type:"get",
-		context:this,
-		success:function(result)
-		{
-			var i;
-			for(i=0, total = result[i+2]; this["exp_"+stat] >= result[i+2]; this["exp_"+stat]-=result[i+2], i++){}
-			this["lvlup_exp"] = result[i+2];
-			if(this == active_unit) 
+			if(inventory === undefined) inventory = {};
+			if(target.inventory === undefined) target.inventory = {};
+			for(var item in target.inventory)
 			{
-				reload(this, 'exp_'+stat);
-				reload(this, 'lvlup_exp');
+				inventory[item] = result[target.inventory[item]];
 			}
-			this.levelUp(this["exp_"+stat], i, stat);
 		}
 	});
+	for(var i = 0; i < Object.keys(target.inventory).length; i++)
+	{
+		addInventory(target, Object.keys(target.inventory)[i]);
+	}
 }
-Player.prototype.moveLocation = function(id)
+$("body").on({
+mouseenter : function(event)
 {
+	var id = $(this).attr("id").split("_")[1];
+	var item_info;
+	if($(this).parent().parent().hasClass("player_inventory")) item_info = inventory_item_info[id];
+	else item_info = active_unit_inventory[id];
+	var item_id = item_info['id'];
+	var item_name = item_info['name'];
+	var item_desc = item_info['desc'];
+	var item_duration;
+	if(item_info['effect_duration'] === undefined) item_duration = "";
+	else item_duration = "지속시간 : "+item_info['effect_duration']+"초<br>";
+	var item_effects = item_info['item_effect'];
+	var item_effect = "<li>";
+	item_effect += getEffectInfo({effect:item_effects});
+	var item_slot;
+	if(item_info['type'] == "consume") item_slot = "소모품";
+	else if(item_info['type'] == "etc") item_slot = "기타";
+	else if(item_info['equip_slot'] == "head")
+	{
+		item_slot = "투구";
+	}
+	else if(item_info['equip_slot'] == "u_body")
+	{
+		item_slot = "갑옷";
+	}
+	else if(item_info['equip_slot'] == "l_body")
+	{
+		item_slot = "바지";
+	}
+	else if(item_info['equip_slot'] == "a_hands")
+	{
+		item_slot = "장갑";
+	}
+	else if(item_info['equip_slot'] == "foot")
+	{
+		item_slot = "신발";
+	}
+	else if(item_info['equip_slot'] == "w_hands")
+	{
+		item_slot = "무기";
+	}
+	item_effect += "</li>";
+	$(".item_detail .item_name").text(item_name);
+	$(".item_detail .item_slot").text(item_slot);
+	$(".item_detail .item_desc").text(item_desc);
+	$(".item_detail .item_duration").html(item_duration);
+	$(".item_detail .item_effect > ul").html(item_effect);
+	$(".item_detail").removeClass("hide");
+	if($('body').height() - $(this).offset().top >= 200) $(".item_detail").css("top", $(this).offset().top-8);
+	else
+	{
+		$(".item_detail").css("top", $(this).offset().top-174);
+		$(".item_detail .item_effect").css("text-align", "right");
+	}
+	$(".item_detail").css("left", $(this).offset().left-8);
+	$(this).css("z-index", "2");
+},
+mouseleave : function(event)
+{
+	$(this).css("z-index", "0");
+	$(".item_detail .item_effect").css("text-align", "left");
+	$(".item_detail").addClass("hide");
+}}, ".inventory_item");
+$("body").on("click",".player_inventory .inventory_item",function(event)
+{
+	var item_effects = [];
+	event.preventDefault();
+	equipItem(player, $(this).attr("id").split("_")[1]);
+});
+$("body").on("click",".active_unit_inventory .inventory_item",function(event)
+{
+	var item_effects = [];
+	event.preventDefault();
+	equipItem(active_unit, $(this).attr("id").split("_")[1]);
+});
+var delItem = function(target, item_id)
+{
+	if(target == player) delete inventory_item_info[item_id];
+	else delete active_unit.inventory[item_id];
+	//$(".player_inventory #item_"+item_id).next().remove();
+	$(".player_inventory #item_"+item_id).remove();
+	$(".item_detail").addClass("hide");
+}
+var equipItem = function(target, item)
+{
+	var item_id = item;
+	var item;
+	if(target == player) item = inventory_item_info[item_id];
+	else item = active_unit_inventory[item_id];
+	var equip_state = 0;
+	var item_type = item['type'];
+	var item_effects = [];
+	if(item_type == "equip")
+	{
+		for(var slot in target.equip_slot)
+		{
+			if(item === undefined) item = {};
+			if(slot == item.equip_slot)
+			{
+				if(slot == "w_hands")
+				{
+					if(item.weapon_type == "twohands" || item.weapon_type == "range" )
+					{
+						for(var i = 0; i < target.equip_slot[slot].length ; i++)
+						{
+							if(target.equip_slot[slot][i] != "none" && target.equip_slot[slot][i] != item_id)
+							{
+								equipItem(target, target.equip_slot[slot][i]);
+								if(i == 1)
+								{
+									target.equip_slot[slot][0] = item_id;
+									target.equip_slot[slot][1] = item_id;
+									equip_state = 1;
+								}
+							}
+							else if(target.equip_slot[slot][i] == item_id)
+							{
+								target.equip_slot[slot][0] = "none";
+								target.equip_slot[slot][1] = "none";
+								equip_state = 2;
+								break;
+							}
+							else if(target.equip_slot[slot][0] == "none" && target.equip_slot[slot][1] == "none")
+							{
+								target.equip_slot[slot][0] = item_id;
+								target.equip_slot[slot][1] = item_id;
+								equip_state = 1;
+								break;
+							}
+						}
+					}
+					else
+					{
+						for(var i = 0; i < target.equip_slot[slot].length ; i++)
+						{
+							if(target.equip_slot[slot][0] == "none" && target.equip_slot[slot][1] != item_id)
+							{
+								target.equip_slot[slot][i] = item_id;
+								equip_state = 1;
+								break;
+							}
+							else if(target.equip_slot[slot][i] == item_id)
+							{
+								target.equip_slot[slot][i] = "none";
+								equip_state = 2;
+								break;
+							}
+							else
+							{
+								if(i == 0) continue;
+								if(target.equip_slot[slot][i] != "none") equipItem(target, target.equip_slot[slot][i]);
+								target.equip_slot[slot][i] = item_id;
+								equip_state = 1;
+							}
+						}
+					}
+				}
+				else
+				{
+					if(target.equip_slot[slot] == "none")
+					{
+						target.equip_slot[slot] = item_id;
+						equip_state = 1;
+					}
+					else if(target.equip_slot[slot] == item_id)
+					{
+						target.equip_slot[slot] = "none";
+						equip_state = 2;
+					}
+					else
+					{
+						equipItem(target, target.equip_slot[slot]);
+						target.equip_slot[slot] = item_id;
+						equip_state = 1;
+					}
+				}
+				break;
+			}
+		}
+		if(equip_state == 1)
+		{
+			for(var i = 0; i < item.item_effect.length; i++)
+			{
+				if(item.item_effect[i] === undefined) item.item_effect[i] = {};
+				item_effects.push(item.item_effect[i]);
+			}
+			addMagicEffect(target, {name:item['name'], effect_name:"equip_"+item_id, duration:"passive", effect:item_effects});
+			if(target == player) $(".player_inventory .inventory_item#item_"+item_id).addClass("equipped");
+			else $(".active_unit_inventory .inventory_item#item_"+item_id).addClass("equipped");
+		}
+		else if(equip_state == 2)
+		{
+			for(var i = 0; i < item.item_effect.length; i++)
+			{
+				if(item.item_effect[i] === undefined) item.item_effect[i] = {};
+				adjustMagicEffect(item.item_effect[i], {name:item['name'], effect_id:"item_"+item_id});
+				reload(target, item.item_effect[i]['type']);
+			}
+			delMagicEffect(target, "equip_"+item_id);
+			if(target == player) $(".player_inventory .inventory_item#item_"+item_id).removeClass("equipped");
+			else $(".active_unit_inventory .inventory_item#item_"+item_id).removeClass("equipped");
+		}
+	}
+	else if(item_type == "consume")
+	{
+		for(var i = 0; i < item['item_effect'].length; i++)
+			item_effects.push(item['item_effect'][i]);
+		addMagicEffect(player, {name:item['name'],effect_name:"consume_"+item_id, duration:item['effect_duration'], effect:item_effects});
+		delItem(player, item_id);
+	}
+}
+var giveItem = function(target, id, num)
+{
+	var num = num || 1;
+	if(num < 0) return;
 	$.ajax({
-		url:"location.json",
+		url:"item.json",
 		dataType:"json",
-		type:"get",
-		context:this,
+		type:"post",
 		async:false,
 		success:function(result)
 		{
-			if(result[id] === undefined) result[id] = {};
-			if(result[id]['magic_effect'] === undefined) result[id]['magic_effect'] = {};
-			var magic_effect = result[id]['magic_effect']['name'];
-			if(magic_effect != "nothing") this.magic_effect[magic_effect] = result[id]['magic_effect']['data'];
-			this.cur_location = result[id];
+			if(inventory_item_info === undefined) inventory_item_info = {};
+			if(target.inventory === undefined) target.inventory = {};
+			if(target == player)
+			{
+				while(num--)
+				{
+					target.inventory[Object.keys(target.inventory).length] = id;
+					inventory_item_info[Object.keys(inventory_item_info).length] = result[id];
+					inventory_item_info[Object.keys(inventory_item_info).length-1]['id'] = id;
+					addInventory(target, Object.keys(inventory_item_info).length-1);
+				}
+			}
+			else
+			{
+				while(num--)
+				{
+					target.inventory[Object.keys(target.inventory).length] = id;
+					active_unit_inventory[Object.keys(active_unit_inventory).length] = result[id];
+					active_unit_inventory[Object.keys(active_unit_inventory).length-1]['id'] = id;
+					addInventory(target, Object.keys(active_unit_inventory).length-1);
+				}
+			}
 		}
 	});
 }
-Npc.prototype = Character;
-Npc.prototype.constructor = Npc;
-Npc.prototype.createRandom = function(npc)
+var getEffectInfo = function(effect)
 {
-	this.type = "npc";
-	/*$.ajax({
-	url:"defname.json",
-	async:false,
-	dataType:"json",
-	type:"get",
-	context:this,
-	success:function(result)
+	var effect_info = "";
+	for(var a = 0; a < effect['effect'].length; a++)
 	{
-		this.npc_name = result['defname'][Math.floor(Math.random()*result['defname'].length)];
+		if(effect['effect'][a]['type'] == "ad") effect_info += "공격력";
+		else if(effect['effect'][a]['type'] == "as") effect_info += "공격속도";
+		else if(effect['effect'][a]['type'] == "hp") effect_info += "HP";
+		else if(effect['effect'][a]['type'] == "mp") effect_info += "MP";
+		else if(effect['effect'][a]['type'] == "ms") effect_info += "이동속도";
+		else if(effect['effect'][a]['type'] == "armor") effect_info += "방어력";
+		else if(effect['effect'][a]['type'] == "resist") effect_info += "마법저항력";
+		else if(effect['effect'][a]['type'] == "stat_str") effect_info += "힘";
+		else if(effect['effect'][a]['type'] == "stat_agi") effect_info += "민첩";
+		else if(effect['effect'][a]['type'] == "stat_int") effect_info += "지능";
+		else if(effect['effect'][a]['type'] == "stat_end") effect_info += "인내";
+		if(effect['effect'][a]['id'] == magic_effect_id["buff"])
+		{
+			effect_info += "+";
+		}
+		else if(effect['effect'][a]['id'] == magic_effect_id["debuff"])
+		{
+			effect_info += "-";
+		}
+		effect_info += effect['effect'][a]['intensity']+(effect['effect'][a]['intensity_type']=="percent"?"%<br>":"<br>");
 	}
-	});*/
-	this.carry_weight = 100;
-	this.relation=0;
-	this.bat = 2.0;
-	this.max_hp = Math.floor(Math.random()*50+100);
-	this.max_mp = Math.floor(Math.random()*50+50);
-	this.ad = Math.floor(Math.random()*20+30);
-	this.as = Math.floor(Math.random()*20+30);
-	this.ms = Math.floor(Math.random()*20+90);
-	this.armor = Math.floor(Math.random()*10+20);
-	this.resist = Math.floor(Math.random()*10+20);
-	this.personality = Math.floor(Math.random()*3+1);
-	this.stat_str = 0;
-	this.stat_agi = 0;
-	this.stat_int = 0;
-	this.stat_end = 0;
-	for(var val in npc)
+	return effect_info;
+}
+var addInventory = function(target, id)
+{
+	var i = id;
+	var item_info;
+	if(target == player) item_info = inventory_item_info[i];
+	else item_info = active_unit_inventory[i];
+	var item_image = "/item/"+item_info['image'];
+	if(target == player) $(".player_inventory .inventory_list").append('<div class="inventory_item" id="item_'+i+'"><div class="inventory_image"><img src="'+item_image+'"></div></div>');
+	else $(".active_unit_inventory .inventory_list").append('<div class="inventory_item" id="item_'+i+'"><div class="inventory_image"><img src="'+item_image+'"></div></div>');
+	for(var slot in target.equip_slot)
 	{
-		if(val != "id" || val != "level" || val != "char_name" || val != "inventory" || val != "equip_slot") this[val] = parseInt(npc[val]);
-	}
-	this.equip_slot = {head:"none", u_body:"none", l_body:"none", a_hands:"none", foot:"none", w_hands:["none", "none"]};
-	this.magic_effect = {};
-	this.inventory = {};
-	this.char_name = npc.char_name;
-	if(npc === undefined) npc = {};
-	var level = npc['level'];
-	var random_level = Math.floor(Math.random()*(11)-5);
-	this.level += Math.floor(Math.random()*random_level);
-	console.log(this.level);
-	if(this.level <= 0) this.level = 1;
-	var sp = this.level*3;
-	var limit_stat;
-	if(sp < 4) limit_stat = 1;
-	else limit_stat = Math.floor(sp/4);
-	var random_limit = Math.floor(Math.random()*limit_stat);
-	var stat = [];
-	for(var i=0; i < 4; i++)
-	{
-		if(i == 3) stat[i] = sp;
-		else stat[i] = Math.floor(Math.random()*(this.level+1)+1);
-		if(sp-stat[i] < 0) stat[i] = 0;
-		sp -= stat[i];
-	}
-	for(var i=0, tmp, a, b; i < 4; i++)
-	{
-		a = Math.floor(Math.random()*4);
-		b = Math.floor(Math.random()*4);
-		tmp = stat[a];
-		stat[a] = stat[b];
-		stat[b] = tmp;
-	}
-	this.stat_str += stat[0];
-	this.stat_agi += stat[1];
-	this.stat_int += stat[2];
-	this.stat_end += stat[3];
-	this.ad += this.stat_str*1;
-	this.as += this.stat_agi*1;
-	this.ms += this.stat_agi*1;
-	this.max_mp += this.stat_int*1;
-	this.max_hp += this.stat_end*2;
-	this.hp = this.max_hp;
-	this.mp = this.max_mp;
-	this.base_hp = this.max_hp;
-	this.base_mp = this.max_mp;
-	this.base_ad = this.ad;
-	this.base_as = this.as;
-	this.base_ms = this.ms;
-	this.base_armor = this.armor;
-	this.base_resist = this.resist;
-	this.base_str = this.stat_str;
-	this.base_agi = this.stat_agi;
-	this.base_int = this.stat_int;
-	this.base_end = this.stat_end;
-	active_unit_inventory = {};
-	for(var i = 0; i < npc['inventory'].length; i++)
-	{
-		giveItem(this, npc['inventory'][i]);
-	}
-	for(var i = 0; i < npc['equip_slot'].length; i++)
-	{
-		equipItem(this, npc['equip_slot'][i]);
+		if(slot == "w_hands")
+		{
+			if(target.equip_slot[slot][0] == i || target.equip_slot[slot][1] == i)
+			{
+				if(target == player) $(".player_inventory .inventory_item#item_"+i).addClass("equipped");
+				else $(".active_unit_inventory .inventory_item#item_"+i).addClass("equipped");
+			}
+		}
+		else if(target.equip_slot[slot] == i)
+		{
+			if(target == player) $(".player_inventory .inventory_item#item_"+i).addClass("equipped");
+			else $(".active_unit_inventory .inventory_item#item_"+i).addClass("equipped");
+		}
 	}
 }
+$("body").on({
+mouseenter : function(event)
+{
+	$(".effect_detail").removeClass("hide");
+	$(".effect_detail").css("top", $(this).offset().top+$(this).height()+2);
+	$(".effect_detail").css("left", $(this).offset().left-8);
+	$(".effect_detail").css("width", $(this).width());
+	if($(this).parent().parent().hasClass("player_effect")) $(".effect_intensity").html(getEffectInfo(player.magic_effect[$(this).attr("id")]));
+	else $(".effect_intensity").html(getEffectInfo(active_unit.magic_effect[$(this).attr("id")]));
+	$(".effect_detail").css("z-index", "1");
+},
+mouseleave : function(event)
+{
+	$(".effect_detail").addClass("hide");
+}}, ".effect_list > ul li");

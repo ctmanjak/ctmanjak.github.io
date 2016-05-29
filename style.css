@@ -356,13 +356,14 @@ body
 .npc_list li
 {
 	list-style-type:none;
+	cursor:pointer;
 }
 /* gamescreen */
 .gamescreen
 {
 	position:absolute;
-	width:70%;
-	height:46%;
+	width:71.5%;
+	height:35%;
 	left:0;
 	border:1px solid;
 }
@@ -391,13 +392,13 @@ body
 	padding:5px;
 	position:absolute;
 }
-/* location_progress */
-.location_progress
+/* dialogue */
+.dialogue_frame
 {
 	position:absolute;
-	top:48%;
-	height:10%;
-	width:70%;
+	top:37%;
+	height:21%;
+	width:71.5%;
 	border:1px solid;
 	left:0;
 	background:rgba(0, 0, 0, 0.5);
@@ -409,8 +410,7 @@ body
 	background:#e8e8e8;
 	display:inline-block;
 	position:absolute;
-	margin:auto;
-	width:70%;
+	width:71.5%;
 	height:40%;
 	bottom:0;
 	left:0;
@@ -420,7 +420,7 @@ body
 {
 	background:#fff;
 	position:relative;
-	height:40px;
+	height:13%;
 	white-space:nowrap;
 	overflow:hidden;
 	margin:0px;
@@ -443,11 +443,14 @@ body
 	display:inline-block;
 	position:relative;
 	width:6%;
+	cursor:pointer;
 }
 .controlscreen
 {
-	position:relative;
+	position:absolute;
 	padding:5px;
+	width:98.5%;
+	height:84%;
 }
 .controlbox
 {
@@ -486,6 +489,7 @@ body
 	display:inline-block;
 	position:relative;
 	text-align:center;
+	cursor:pointer;
 }
 .location_list ul
 {
@@ -502,12 +506,26 @@ body
 	color:#fff;
 	text-shadow:-1px -1px 1px #000,-1px 1px 1px #000,1px -1px 1px #000,1px 1px 1px #000;
 	font-size:1.2em;
+	cursor:pointer;
+}
+.player_inventory
+{
+	width:100%;
+	height:100%;
+}
+.inventory_list
+{
+	overflow:auto;
+	position:relative;
+	width:100%;
+	height:100%;
 }
 .inventory_item
 {
 	margin:0;
 	padding:0;
 	margin-right:5px;
+	margin-bottom:5px;
 	list-style-type:none;
 	display:inline-block;
 	border:1px solid;
@@ -516,6 +534,7 @@ body
 	width:34px;
 	height:34px;
 	background:#838383;
+	cursor:pointer;
 }
 .inventory_item ul
 {
@@ -603,6 +622,14 @@ body
 .item_duration
 {
 	font-size:0.9em;
+}
+.quest_list
+{
+	
+}
+.quest_detail
+{
+	
 }
 .h_line
 {

@@ -41,10 +41,10 @@
 				}
 				foreach($location_effect as $val)
 				{
-					if($val == "resistance") $location_effects[] = array("id" => 0x40, "type" => $resist_type);
-					else if($val == "debuff") $location_effects[] = array("id" => 0x80, "type" => $debuff_type, "intensity" => $debuff_intensity);
-					else if($val == "buff") $location_effects[] = array("id" => 0x100, "type" => $buff_type, "intensity" => $buff_intensity);
-					else if($val == "silence") $location_effects[] = array("id" => 0x4);
+					if($val == "resistance") $location_effects[] = array("id" => 7, "type" => $resist_type);
+					else if($val == "debuff") $location_effects[] = array("id" => 8, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type);
+					else if($val == "buff") $location_effects[] = array("id" => 9, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type);
+					else if($val == "silence") $location_effects[] = array("id" => 3);
 					else if($val == "nothing"); $location_effects[] = array("id" => 0);
 				}
 				$move_locations = explode(",", $move_location);
@@ -99,6 +99,7 @@
 				$data['id'] = $npc_id;
 				$data['char_name'] = $name;
 				$data['level'] = $level;
+				$data['dialogue'] = explode(",", $dialogue);
 				if(!empty($max_hp)) $data['max_hp'] = $max_hp;
 				if(!empty($max_mp)) $data['max_mp'] = $max_mp;
 				if(!empty($ad)) $data['ad'] = $ad;
@@ -119,14 +120,82 @@
 						$data['inventory'][$i] = $inventory[$i];
 					}
 				}
-				print_r($data['inventory']);
 				if(!empty($equip_slot))
 				{
-					$equip_slot = explode(",", $equip_slot);
+					$data['equip_slot'] = explode(",", $equip_slot);
+				}
+				if(!empty($quest))
+				{
+					$data['quest'] = explode(",", $quest);
 				}
 				$npcs[] = $data;
 				$npcs = json_encode($npcs);
 				file_put_contents("npc.json", $npcs);
+				print "<script>history.go(-1)</script>";
+			}else print "<script>alert('이미지 파일만 업로드할 수 있습니다.');history.go(-1)</script>";
+		}
+		else if($category == "monster")
+		{
+			$json_monsters = file_get_contents("monster.json");
+			$monsters = json_decode($json_monsters, true);
+			$monster_id = count($monsters);
+			$check = @getimagesize($_FILES["image"]["tmp_name"]);
+			if($check !== false) $upload = 1;
+			else $upload = 0;
+			if($upload == 1)
+			{
+				$name = strip_tags($name);
+				$desc = strip_tags($desc);
+				$filename = $_FILES['image']['name'];
+				$filename = iconv('utf-8', 'euckr', $filename);
+				if(!file_exists("./monster/".$filename))
+				{
+					$dest = "./monster/".$filename;
+					$src = $_FILES['image']['tmp_name'];
+					move_uploaded_file($src, $dest);
+				}
+				else
+				{
+					$ext = pathinfo($filename, PATHINFO_EXTENSION);
+					$filename2 = basename($filename, ".".$ext);
+					for($i = 1; file_exists("./monster/".$filename); $i++)
+					{
+						$filename = $filename2."_".$i.".".$ext;
+					}
+					$dest = "./monster/".$filename;
+					$src = $_FILES['image']['tmp_name'];
+					move_uploaded_file($src, $dest);
+				}
+				$data['id'] = $monster_id;
+				$data['char_name'] = $name;
+				$data['level'] = $level;
+				if(!empty($max_hp)) $data['max_hp'] = $max_hp;
+				if(!empty($max_mp)) $data['max_mp'] = $max_mp;
+				if(!empty($ad)) $data['ad'] = $ad;
+				if(!empty($as)) $data['as'] = $as;
+				if(!empty($ms)) $data['ms'] = $ms;
+				if(!empty($armor)) $data['armor'] = $armor;
+				if(!empty($resist)) $data['resist'] = $resist;
+				if(!empty($stat_str)) $data['stat_str'] = $stat_str;
+				if(!empty($stat_agi)) $data['stat_agi'] = $stat_agi;
+				if(!empty($stat_int)) $data['stat_int'] = $stat_int;
+				if(!empty($stat_end)) $data['stat_end'] = $stat_end;
+				if(!empty($inventory))
+				{
+					$data['inventory'] = array();
+					$inventory = explode(",",$inventory);
+					for($i = 0; $i < count($inventory); $i++)
+					{
+						$data['inventory'][$i] = $inventory[$i];
+					}
+				}
+				if(!empty($equip_slot))
+				{
+					$data['equip_slot'] = explode(",", $equip_slot);
+				}
+				$monsters[] = $data;
+				$monsters = json_encode($monsters);
+				file_put_contents("monster.json", $monsters);
 				print "<script>history.go(-1)</script>";
 			}else print "<script>alert('이미지 파일만 업로드할 수 있습니다.');history.go(-1)</script>";
 		}
@@ -164,19 +233,19 @@
 				}
 				foreach($item_effect as $val)
 				{
-					if($val == "resistance") $item_effects[] = array("id" => 0x40, "type" => $resist_type);
+					if($val == "resistance") $item_effects[] = array("id" => 7, "type" => $resist_type);
 					else if($val == "debuff")
 					{
-						if($type == "equip") $item_effects[] = array("id" => 0x80, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type);
-						else $item_effects[] = array("id" => 0x80, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type);
+						if($type == "equip") $item_effects[] = array("id" => 8, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type);
+						else $item_effects[] = array("id" => 8, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type);
 						
 					}
 					else if($val == "buff")
 					{
-						if($type == "equip") $item_effects[] = array("id" => 0x100, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type);
-						else $item_effects[] = array("id" => 0x100, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type);
+						if($type == "equip") $item_effects[] = array("id" => 9, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type);
+						else $item_effects[] = array("id" => 9, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type);
 					}
-					else if($val == "silence") $item_effects[] = array("id" => 0x4);
+					else if($val == "silence") $item_effects[] = array("id" => 3);
 					else if($val == "nothing") $item_effects[] = array("id" => 0);
 				}
 				$data["id"] = $item_id;
@@ -184,6 +253,7 @@
 				$data["name"]=$name;
 				$data["desc"]=$desc;
 				$data["image"]=$filename;
+				$data['weight']=$weight;
 				if(!empty($item_effects)) $data["item_effect"] = $item_effects;
 				if(!empty($equip_slot)) $data["equip_slot"] = $equip_slot;
 				if(!empty($weapon_type)) $data["weapon_type"] = $weapon_type;
@@ -194,6 +264,72 @@
 				file_put_contents("item.json", $items);
 				print "<script>history.go(-1)</script>";
 			}else print "<script>alert('이미지 파일만 업로드할 수 있습니다.');history.go(-1)</script>";
+		}
+		else if($category == "quest")
+		{
+			$json_quests = file_get_contents("quest.json");
+			$quests = json_decode($json_quests, true);
+			$quest_id = count($quests);
+			
+			$data['id'] = $quest_id;
+			$data['name'] = $name;
+			$data['desc'] = $desc;
+			$data['complete'] = 0;
+			$data['begin_dialogue'] = $begin_dialogue;
+			$data['progress_dialogue'] = $progress_dialogue;
+			$data['complete_dialogue'] = $complete_dialogue;
+			foreach($complete_event as $key => $val)
+			{
+				$data['complete_condition'][$key]['event'] = $val;
+				if($val == "1")
+				{
+					$data['complete_condition'][$key]['condition']['npc'] = $visit_npc[$key];
+				}
+				else if($val == "2")
+				{
+					$data['complete_condition'][$key]['condition']['location'] = $visit_location[$key];
+				}
+				else if($val == "3")
+				{
+					$data['complete_condition'][$key]['condition']['npc'] = $give_item_npc[$key];
+					$data['complete_condition'][$key]['condition']['item'] = $give_item_id[$key];
+				}
+				$data['complete_condition'][$key]['state'] = 0;
+			}
+			foreach($reward as $val)
+			{
+				if($val == "exp") $data['reward']['exp'][] = $exp_amount;
+				else if($val == "money") $data['reward']['money'][] = $money_amount;
+			}
+			$quests[] = $data;
+			$quests = json_encode($quests);
+			file_put_contents("quest.json", $quests);
+			print "<script>history.go(-1)</script>";
+		}
+		else if($category == "dialogue")
+		{
+			$json_dialogues = file_get_contents("dialogue.json");
+			$dialogues = json_decode($json_dialogues, true);
+			$dialogue_id = count($dialogues);
+			
+			$data['id'] = $dialogue_id;
+			$data['content'] = $content;
+			foreach($answer_content as $key => $val)
+			{
+				$data['answer'][$key]['answer_content'] = $val;
+			}
+			foreach($answer_event_type as $key => $val)
+			{
+				$data['answer'][$key]['answer_event_type'] = $val;
+			}
+			foreach($answer_event as $key => $val)
+			{
+				$data['answer'][$key]['answer_event'] = $val;
+			}
+			$dialogues[] = $data;
+			$dialogues = json_encode($dialogues);
+			file_put_contents("dialogue.json", $dialogues);
+			print "<script>history.go(-1)</script>";
 		}
 	}
 ?>
@@ -211,8 +347,9 @@
 				<option selected value="location">장소
 				<option value="npc">NPC
 				<option value="monster">몬스터
+				<option value="quest">퀘스트
+				<option value="dialogue">대사
 				<option value="item">아이템
-				<option value="item">퀘스트
 			</select><br>
 			<div class="add_info">
 				타입 : <select name="type"><option value="town">마을<option value="field">필드<option value="dungeon">던전</select><br>
@@ -285,8 +422,30 @@
 					'민첩 : <input type="number" name="stat_agi"><br>'+
 					'지능 : <input type="number" name="stat_int"><br>'+
 					'인내 : <input type="number" name="stat_end"><br>'+
-					'아이템 : <input type="text" name="inventory"><br>'+
-					'착용아이템 : <input type="text" name="equip_slot"> 같은 부위 아이템 착용시키면 뒤에 쓴 것 적용, 인벤토리에 있는 순서를 써야함(0부터)<br>'+
+					'인벤토리 : <input type="text" name="inventory"> ,로 구분<br>'+
+					'착용아이템 : <input type="text" name="equip_slot"> ,로 구분, 같은 부위 아이템 착용시키면 뒤에 쓴 것 적용, 인벤토리에 있는 순서를 써야함(0부터)<br>'+
+					'퀘스트 : <input type="text" name="quest"> ,로 구분<br>'+
+					'대사 : <input type="text" name="dialogue"> ,로 구분<br>'+
+					'돈 : <input type="number" name="money"><br>');
+				}
+				if(category == "monster")
+				{
+					$(".add_info").append('이름 : <input type="text" name="name"><span></span><br>'+
+					'레벨 : <input type="number" name="level" min="1" max="150"><br>'+
+					'사진 : <input type="file" name="image" accept="image/*"><br>'+
+					'HP : <input type="number" name="max_hp"><br>'+
+					'MP : <input type="number" name="max_mp"><br>'+
+					'공격력 : <input type="number" name="ad"><br>'+
+					'공격속도 : <input type="number" name="as"><br>'+
+					'이동속도 : <input type="number" name="ms"><br>'+
+					'방어력 : <input type="number" name="armor"><br>'+
+					'마법저항력 : <input type="number" name="resist"><br>'+
+					'힘 : <input type="number" name="stat_str"><br>'+
+					'민첩 : <input type="number" name="stat_agi"><br>'+
+					'지능 : <input type="number" name="stat_int"><br>'+
+					'인내 : <input type="number" name="stat_end"><br>'+
+					'인벤토리 : <input type="text" name="inventory"> ,로 구분<br>'+
+					'착용아이템 : <input type="text" name="equip_slot"> ,로 구분, 같은 부위 아이템 착용시키면 뒤에 쓴 것 적용, 인벤토리에 있는 순서를 써야함(0부터)<br>'+
 					'돈 : <input type="number" name="money"><br>');
 				}
 				else if(category == "location")
@@ -300,9 +459,21 @@
 					'이동 가능 지역 ID : <input type="text" name="move_location"><br>'+
 					'인카운터 NPC ID : <input type="text" name="encounter_id"><br>');
 				}
-				else if(category == "monster")
+				else if(category == "quest")
 				{
-					
+					$(".add_info").append('타입 : <select name="complete_event[]" id="quest_type" multiple><option value="0">없음<option value="1">npc 방문<option value="2">장소 방문<option value="3">아이템 주기<option value="4">돈 주기<option value="5">npc 죽이기</select><div></div>'+
+					'조건 : <select name="type" id="quest_condition" multiple><option value="0">없음<option value="1">첫만남<option value="2">진행중인 퀘스트<option value="3">완료한 퀘스트<option value="4">완료하지 않은 퀘스트<option value="5">스탯</select><div></div>'+
+					'이름 : <input type="text" name="name" id="add_desc"><br>'+
+					'설명 : <input type="text" name="desc" id="add_desc"><br>'+
+					'시작 대사 ID : <input type="text" name="begin_dialogue" id="add_dialogue"><br>'+
+					'진행중 대사 ID : <input type="text" name="progress_dialogue" id="add_dialogue"><br>'+
+					'완료 대사 ID : <input type="text" name="complete_dialogue" id="add_dialogue"><br>'+
+					'보상 : <select name="reward[]" id="quest_reward" multiple><option value="exp">경험치<option value="money">돈</select><div></div><br>');
+				}
+				else if(category == "dialogue")
+				{
+					$(".add_info").append('내용 : <input type="text" name="content"><div></div>'+
+					'대답 : <input type="text" name="answer_content[]" value="다음"><br>대답 시 이벤트 : <select name="answer_event_type[]" id="dialogue_event" multiple><option value="1" selected>없음<option value="2">다음 대사<option value="3">장소 이동<option value="4">아이템 주기<option value="5">돈 주기<option value="6">npc 바꾸기<option value="7">이펙트주기<option value="8">퀘스트 추가<option value="9">퀘스트 완료</select><div><input type="hidden" name="answer_event[]" value="0"></div> <input type="button" id="add_answer" value="대답 추가"><div></div>');
 				}
 				else if(category == "item")
 				{
@@ -311,6 +482,7 @@
 					'이름 : <input type="text" name="name"><span></span><br>'+
 					'설명 : <input type="text" name="desc" id="add_desc"><br>'+
 					'아이템효과 : <select name="item_effect[]" class="magic_effect" id="item_effect" multiple><option value="nothing" selected>없음<option value="silence">침묵<option value="resistance">면역<option value="debuff">약화<option value="buff">강화</select><div></div>'+
+					'무게 : <input type="number" name="weight" value="1"><br>'+
 					'가격 : <input type="number" name="price" value="100"><br>');
 				}
 			});
@@ -330,6 +502,69 @@
 				if(equip_slot == "w_hands")
 				{
 					$(this).next().append("타입 : <select name='weapon_type'><option value='onehand'>한손<option value='twohands'>양손<option value='range'>원거리");
+				}
+			});
+			$("body").on("change", "#quest_type", function(event)
+			{
+				var quest_type = $(this).val();
+				$(this).next().empty();
+				for(var i = 0; i < quest_type.length; i++)
+				{
+					if(quest_type[i] == "1")
+					{
+						$(this).next().append("방문할 NPC ID : <input type='text' name='visit_npc[]'>");
+					}
+					else if(quest_type[i] == "2")
+					{
+						$(this).next().append("방문할 장소 ID : <input type='text' name='visit_location[]'>");
+					}
+					else if(quest_type[i] == "3")
+					{
+						$(this).next().append("NPC ID : <input type='text' name='give_item_npc[]'>");
+						$(this).next().append("아이템 ID : <input type='text' name='give_item_id[]'>");
+					}
+				}
+			});
+			$("body").on("click", "#add_answer", function(event)
+			{
+				$(this).next().append("대답 : <input type='text' name='answer_content[]'><br>대답 시 이벤트 : <select name='answer_event_type[]' id='dialogue_event' multiple><option value='1' selected>없음<option value='2'>다음 대사<option value='3'>장소 이동<option value='4'>아이템 주기<option value='5'>돈 주기<option value='6'>npc 바꾸기<option value='7'>이펙트주기<option value='8'>퀘스트 추가<option value='9'>퀘스트 완료</select><div><input type='hidden' name='answer_event[]' value='0'></div> <input type='button' id='add_answer' value='대답 추가'><div></div>");
+				$(this).remove();
+			});
+			$("body").on("change", "#dialogue_event", function(event)
+			{
+				var dialogue_event = $(this).val();
+				$(this).next().empty();
+				if(dialogue_event == "1")
+				{
+					$(this).next().append("<input type='hidden' name='answer_event[]' value='0'>");
+				}
+				else if(dialogue_event == "2")
+				{
+					$(this).next().append("다음 대사 : <input type='number' name='answer_event[]'>");
+				}
+				else if(dialogue_event == "8")
+				{
+					$(this).next().append("추가할 퀘스트 : <input type='number' name='answer_event[]'>");
+				}
+				else if(dialogue_event == "9")
+				{
+					$(this).next().append("완료할 퀘스트 : <input type='number' name='answer_event[]'>");
+				}
+			});
+			$("body").on("change", "#quest_reward", function(event)
+			{
+				var quest_reward = $(this).val();
+				$(this).next().empty();
+				for(var i = 0; i < quest_reward.length; i++)
+				{
+					if(quest_reward[i] == "exp")
+					{
+						$(this).next().append("경험치량 : <input type='number' name='exp_amount' value='10'><br>");
+					}
+					if(quest_reward[i] == "money")
+					{
+						$(this).next().append("돈 액수 : <input type='number' name='money_amount' value='10'><br>");
+					}
 				}
 			});
 			/*$('#additem').submit(function()
