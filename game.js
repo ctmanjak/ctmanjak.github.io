@@ -1108,13 +1108,13 @@ var moveLocation = function(id)
 	{
 		player_location = 1;
 		$("#explore").removeClass("hide");
-		$("#meet").addClass("hide");
+		$("#visit").addClass("hide");
 		//$("#move_location").addClass("hide");
 	}
 	else if(location['type'] == "town")
 	{
 		$("#explore").addClass("hide");
-		$("#meet").removeClass("hide");
+		$("#visit").removeClass("hide");
 		$("#move_location").removeClass("hide");
 	}
 	$(".bgimg").css("background-image", "url('bg/"+location['bg']+"')");

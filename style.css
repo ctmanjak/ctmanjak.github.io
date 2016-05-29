@@ -508,6 +508,50 @@ body
 	font-size:1.2em;
 	cursor:pointer;
 }
+.visit_list_window
+{
+	position:absolute;
+	top:50%;
+	left:50%;
+	transform:translate(-50%, -50%);
+	width:500;
+	height:400;
+	border:1px solid;
+	background:#fff;
+}
+.visit_list ul
+{
+	margin:0;
+	margin-top:30px;
+	padding:0;
+}
+.visit_list li
+{
+	display:inline-block;
+	position:relative;
+	margin:0;
+	padding:0;
+	margin-left:10px;
+	list-style-type:none;
+	height:84px;
+	overflow:hidden;
+	width:64px;
+	font-size:1em;
+	cursor:pointer;
+	border:1px solid #000;
+}
+.visit_list img
+{
+	position:relative;
+	border-bottom:1px solid;
+}
+.visit_list div.npc_name
+{
+	margin:0;
+	padding:0;
+	position:relative;
+	text-align:center;
+}
 .player_inventory
 {
 	width:100%;

@@ -178,6 +178,17 @@
 				</div>
 			</div>
 		</div>
+		<div class="visit_list_frame">
+			<div class="visit_list_window">
+				<div style="position:absolute;right:0"><input type="button" class="close" value="닫기"></div>
+				<div class="visit_list">
+					<ul>
+						<li class="select_visit_npc" id="npc_0"><img src="npc/npc.png"><div class="npc_name">NPC1</div></li>
+						<li class="select_visit_npc" id="npc_1"><img src="npc/npc.png"><div class="npc_name">NPC2</div></li>
+					</ul>
+				</div>
+			</div>
+		</div>
 		<script src="/js/jquery.min.js"></script>
 		<script src="/js/jquery-ui.min.js"></script>
 		<script src="game.js"></script>
@@ -192,6 +203,18 @@
 				event.preventDefault();
 				$("#dialogue").click();
 				//convertType(active_unit);
+			});
+			$("#visit").click(function(event)
+			{
+				for(var i = 0; i < npcs_info.length; i++)
+				{
+					$(".visit_list > ul").append("<li class='select_visit_npc' id='npc_"+i+"'><img src='npc/npc.png'><div class='npc_name'>"+npcs_info[i]['name']+"</div></li>");
+				}
+				$(".visit_list_window").removeClass("hide");
+			});
+			$("body").on("click", ".select_visit_npc", function()
+			{
+				
 			});
 			var quest_condition = {nothing:0, first_meet:1, in_progress_quest:2, complete_quest:3, incomplete_quest:4, check_stat:5};
 			var event_dialogue = {nothing:1, next_dialogue:2, move_location:3, give_item:4, give_money:5, change_npc:6, give_effect:7, add_quest:8, complete_quest:9};
@@ -221,11 +244,12 @@
 				$(".dialogue_content").text("");
 				$(".dialogue_select > ul").empty();
 			}
-			var firstDialogue = function()
+			var firstDialogue = function(target)
 			{
+				var target = target || active_unit;
 				$(".dialogue_content").text("");
 				$(".dialogue_select > ul").empty();
-				$(".dialogue_content").text(active_unit['char_name']+" : 무슨 일이신가요?");
+				$(".dialogue_content").text(target['char_name']+" : 무슨 일이신가요?");
 				//$(".dialogue_select > ul").append("<li class='first_answer' id='trade'>거래</li>");
 				$(".dialogue_select > ul").append("<li class='first_answer' id='quest'>퀘스트</li>");
 				$(".dialogue_select > ul").append("<li class='first_answer' id='ip_quest'>진행 퀘스트</li>");
@@ -366,7 +390,7 @@
 			});
 			$("#dialogue").click(function(event)
 			{
-				for(var val in quests_info['in_progress_quest'])
+				/*for(var val in quests_info['in_progress_quest'])
 				{
 					if(quests_info['in_progress_quest'][val]['complete_condition'] === undefined) quests_info['in_progress_quest'][val]['complete_condition'] = [];
 					for(var i = 0; i < quests_info['in_progress_quest'][val]['complete_condition'].length; i++)
@@ -379,8 +403,8 @@
 							}
 						}
 					}
-				}
-				firstDialogue();
+				}*/
+				firstDialogue(active_unit);
 			});
 			var quests_info = {in_progress_quest:{}, complete_quest:{}};
 			var addQuest = function(quest_id)
