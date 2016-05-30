@@ -69,65 +69,80 @@
 			$json_npcs = file_get_contents("npc.json");
 			$npcs = json_decode($json_npcs, true);
 			$npc_id = count($npcs);
-			$check = @getimagesize($_FILES["image"]["tmp_name"]);
-			if($check !== false) $upload = 1;
-			else $upload = 0;
+			foreach($_FILES["image"]["tmp_name"] as $key => $val)
+			{
+				$check[$key] = @getimagesize($_FILES["image"]["tmp_name"][$key]);
+			}
+			foreach($check as $val)
+			{
+				if($val !== false)
+				{
+					$upload = 1;
+					break;
+				}
+				else $upload = 0;
+			}
 			if($upload == 1)
 			{
-				$name = strip_tags($name);
-				$desc = strip_tags($desc);
-				$filename = $_FILES['image']['name'];
-				$filename = iconv('utf-8', 'euckr', $filename);
-				if(!file_exists("./npc/".$filename))
+				foreach($name as $key => $val)
 				{
-					$dest = "./npc/".$filename;
-					$src = $_FILES['image']['tmp_name'];
-					move_uploaded_file($src, $dest);
-				}
-				else
-				{
-					$ext = pathinfo($filename, PATHINFO_EXTENSION);
-					$filename2 = basename($filename, ".".$ext);
-					for($i = 1; file_exists("./npc/".$filename); $i++)
+					$name[$key] = strip_tags($name[$key]);
+					$desc[$key] = strip_tags($desc[$key]);
+					$filename[$key] = $_FILES['image']['name'][$key];
+					$filename[$key] = iconv('utf-8', 'euckr', $filename[$key]);
+					if(!file_exists("./npc/".$filename[$key]))
 					{
-						$filename = $filename2."_".$i.".".$ext;
+						$dest[$key] = "./npc/".$filename[$key];
+						$src[$key] = $_FILES['image']['tmp_name'][$key];
+						move_uploaded_file($src[$key], $dest[$key]);
 					}
-					$dest = "./npc/".$filename;
-					$src = $_FILES['image']['tmp_name'];
-					move_uploaded_file($src, $dest);
+					else
+					{
+						$ext[$key] = pathinfo($filename[$key], PATHINFO_EXTENSION);
+						$filename2[$key] = basename($filename[$key], ".".$ext[$key]);
+						for($i = 1; file_exists("./npc/".$filename[$key]); $i++)
+						{
+							$filename[$key] = $filename2[$key]."_".$i.".".$ext[$key];
+						}
+						$dest[$key] = "./npc/".$filename[$key];
+						$src[$key] = $_FILES['image']['tmp_name'][$key];
+						move_uploaded_file($src[$key], $dest[$key]);
+					}
+					$data["npcs"][$key]['char_name'] = $name[$key];
+					$data["npcs"][$key]['level'] = $level[$key];
+					$data["npcs"][$key]['image'] = $filename[$key];
+					if(!empty($dialogue[$key])) $data["npcs"][$key]['dialogue'] = explode(",", $dialogue[$key]);
+					if(!empty($max_hp[$key])) $data["npcs"][$key]['max_hp'] = $max_hp[$key];
+					if(!empty($max_mp[$key])) $data["npcs"][$key]['max_mp'] = $max_mp[$key];
+					if(!empty($ad[$key])) $data["npcs"][$key]['ad'] = $ad[$key];
+					if(!empty($as[$key])) $data["npcs"][$key]['as'] = $as[$key];
+					if(!empty($ms[$key])) $data["npcs"][$key]['ms'] = $ms[$key];
+					if(!empty($armor[$key])) $data["npcs"][$key]['armor'] = $armor[$key];
+					if(!empty($resist[$key])) $data["npcs"][$key]['resist'] = $resist[$key];
+					if(!empty($stat_str[$key])) $data["npcs"][$key]['stat_str'] = $stat_str[$key];
+					if(!empty($stat_agi[$key])) $data["npcs"][$key]['stat_agi'] = $stat_agi[$key];
+					if(!empty($stat_int[$key])) $data["npcs"][$key]['stat_int'] = $stat_int[$key];
+					if(!empty($stat_end[$key])) $data["npcs"][$key]['stat_end'] = $stat_end[$key];
+					if(!empty($inventory[$key]))
+					{
+						$data["npcs"][$key]['inventory'] = array();
+						$inventory_temp = explode(",",$inventory[$key]);
+						for($i = 0; $i < count($inventory_temp); $i++)
+						{
+							$data["npcs"][$key]['inventory'][$i] = $inventory_temp[$i];
+						}
+					}
+					if(!empty($equip_slot[$key]))
+					{
+						$data["npcs"][$key]['equip_slot'] = explode(",", $equip_slot[$key]);
+					}
+					if(!empty($quest[$key]))
+					{
+						$data["npcs"][$key]['quest'] = explode(",", $quest[$key]);
+					}
 				}
+				$data['group_name'] = $group_name;
 				$data['id'] = $npc_id;
-				$data['char_name'] = $name;
-				$data['level'] = $level;
-				$data['dialogue'] = explode(",", $dialogue);
-				if(!empty($max_hp)) $data['max_hp'] = $max_hp;
-				if(!empty($max_mp)) $data['max_mp'] = $max_mp;
-				if(!empty($ad)) $data['ad'] = $ad;
-				if(!empty($as)) $data['as'] = $as;
-				if(!empty($ms)) $data['ms'] = $ms;
-				if(!empty($armor)) $data['armor'] = $armor;
-				if(!empty($resist)) $data['resist'] = $resist;
-				if(!empty($stat_str)) $data['stat_str'] = $stat_str;
-				if(!empty($stat_agi)) $data['stat_agi'] = $stat_agi;
-				if(!empty($stat_int)) $data['stat_int'] = $stat_int;
-				if(!empty($stat_end)) $data['stat_end'] = $stat_end;
-				if(!empty($inventory))
-				{
-					$data['inventory'] = array();
-					$inventory = explode(",",$inventory);
-					for($i = 0; $i < count($inventory); $i++)
-					{
-						$data['inventory'][$i] = $inventory[$i];
-					}
-				}
-				if(!empty($equip_slot))
-				{
-					$data['equip_slot'] = explode(",", $equip_slot);
-				}
-				if(!empty($quest))
-				{
-					$data['quest'] = explode(",", $quest);
-				}
 				$npcs[] = $data;
 				$npcs = json_encode($npcs);
 				file_put_contents("npc.json", $npcs);
@@ -336,7 +351,6 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<link type="text/css" href="style.css" rel="stylesheet">
 	</head>
 	<body>
 		<form method="post" action="addall.php" enctype="multipart/form-data" autocomplete="off" id="additem">
@@ -408,25 +422,26 @@
 				$(".add_info").html("");
 				if(category == "npc")
 				{
-					$(".add_info").append('이름 : <input type="text" name="name"><span></span><br>'+
-					'레벨 : <input type="number" name="level" min="1" max="150"><br>'+
-					'사진 : <input type="file" name="image" accept="image/*"><br>'+
-					'HP : <input type="number" name="max_hp"><br>'+
-					'MP : <input type="number" name="max_mp"><br>'+
-					'공격력 : <input type="number" name="ad"><br>'+
-					'공격속도 : <input type="number" name="as"><br>'+
-					'이동속도 : <input type="number" name="ms"><br>'+
-					'방어력 : <input type="number" name="armor"><br>'+
-					'마법저항력 : <input type="number" name="resist"><br>'+
-					'힘 : <input type="number" name="stat_str"><br>'+
-					'민첩 : <input type="number" name="stat_agi"><br>'+
-					'지능 : <input type="number" name="stat_int"><br>'+
-					'인내 : <input type="number" name="stat_end"><br>'+
-					'인벤토리 : <input type="text" name="inventory"> ,로 구분<br>'+
-					'착용아이템 : <input type="text" name="equip_slot"> ,로 구분, 같은 부위 아이템 착용시키면 뒤에 쓴 것 적용, 인벤토리에 있는 순서를 써야함(0부터)<br>'+
-					'퀘스트 : <input type="text" name="quest"> ,로 구분<br>'+
-					'대사 : <input type="text" name="dialogue"> ,로 구분<br>'+
-					'돈 : <input type="number" name="money"><br>');
+					$(".add_info").append('그룹 이름 : <input type="text" name="group_name"><span></span><br>'+
+					'이름 : <input type="text" name="name[]"><span></span><br>'+
+					'레벨 : <input type="number" name="level[]" min="1" max="150"><br>'+
+					'사진 : <input type="file" name="image[]" accept="image/*"><br>'+
+					'HP : <input type="number" name="max_hp[]"><br>'+
+					'MP : <input type="number" name="max_mp[]"><br>'+
+					'공격력 : <input type="number" name="ad[]"><br>'+
+					'공격속도 : <input type="number" name="as[]"><br>'+
+					'이동속도 : <input type="number" name="ms[]"><br>'+
+					'방어력 : <input type="number" name="armor[]"><br>'+
+					'마법저항력 : <input type="number" name="resist[]"><br>'+
+					'힘 : <input type="number" name="stat_str[]"><br>'+
+					'민첩 : <input type="number" name="stat_agi[]"><br>'+
+					'지능 : <input type="number" name="stat_int[]"><br>'+
+					'인내 : <input type="number" name="stat_end[]"><br>'+
+					'인벤토리 : <input type="text" name="inventory[]"> ,로 구분<br>'+
+					'착용아이템 : <input type="text" name="equip_slot[]"> ,로 구분, 같은 부위 아이템 착용시키면 뒤에 쓴 것 적용, 인벤토리에 있는 순서를 써야함(0부터)<br>'+
+					'퀘스트 : <input type="text" name="quest[]"> ,로 구분<br>'+
+					'대사 : <input type="text" name="dialogue[]"> ,로 구분<br>'+
+					'돈 : <input type="number" name="money[]"> <input type="button" id="add_npc" value="NPC 추가"><div></div>');
 				}
 				if(category == "monster")
 				{
@@ -566,6 +581,29 @@
 						$(this).next().append("돈 액수 : <input type='number' name='money_amount' value='10'><br>");
 					}
 				}
+			});
+			$("body").on("click", "#add_npc", function()
+			{
+				$(this).next().append('이름 : <input type="text" name="name[]"><span></span><br>'+
+					'레벨 : <input type="number" name="level[]" min="1" max="150"><br>'+
+					'사진 : <input type="file" name="image[]" accept="image/*"><br>'+
+					'HP : <input type="number" name="max_hp[]"><br>'+
+					'MP : <input type="number" name="max_mp[]"><br>'+
+					'공격력 : <input type="number" name="ad[]"><br>'+
+					'공격속도 : <input type="number" name="as[]"><br>'+
+					'이동속도 : <input type="number" name="ms[]"><br>'+
+					'방어력 : <input type="number" name="armor[]"><br>'+
+					'마법저항력 : <input type="number" name="resist[]"><br>'+
+					'힘 : <input type="number" name="stat_str[]"><br>'+
+					'민첩 : <input type="number" name="stat_agi[]"><br>'+
+					'지능 : <input type="number" name="stat_int[]"><br>'+
+					'인내 : <input type="number" name="stat_end[]"><br>'+
+					'인벤토리 : <input type="text" name="inventory[]"> ,로 구분<br>'+
+					'착용아이템 : <input type="text" name="equip_slot[]"> ,로 구분, 같은 부위 아이템 착용시키면 뒤에 쓴 것 적용, 인벤토리에 있는 순서를 써야함(0부터)<br>'+
+					'퀘스트 : <input type="text" name="quest[]"> ,로 구분<br>'+
+					'대사 : <input type="text" name="dialogue[]"> ,로 구분<br>'+
+					'돈 : <input type="number" name="money[]"> <input type="button" id="add_npc" value="NPC 추가"><div></div>');
+				$(this).remove();
 			});
 			/*$('#additem').submit(function()
 			{

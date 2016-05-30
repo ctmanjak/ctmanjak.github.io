@@ -95,13 +95,10 @@
 				<div class="dialogue_image">
 				</div>
 				<div class="dialogue_text">
-					<div class="dialogue_name">
-					</div>
 					<div class="dialogue_content">
 					</div>
 					<div class="dialogue_select">
 						<ul>
-						
 						</ul>
 					</div>
 				</div>
@@ -115,12 +112,12 @@
 				<div class="controlscreen">
 					<div class="controlbox">
 						<input type="button" id="test" value="TEST">
-						<input type="button" id="explore" value="탐험">
-						<input type="button" class="hide" id="meet" value="방문">
-						<input type="button" id="attack" value="공격">
+						<input type="button" class="hide" id="explore" value="탐험">
+						<input type="button" class="hide" id="visit" value="방문">
 						<input type="button" class="hide" id="dialogue" value="대화">
+						<input type="button" class="hide" id="attack" value="공격">
 						<input type="button" class="hide" id="main_location" value="나가기">
-						<input type="button" class="" id="move_location" value="지역 이동">
+						<input type="button" class="hide" id="move_location" value="지역 이동">
 					</div>
 					<div class="player_inventory hide">
 						<div class="inventory_list">
@@ -141,10 +138,8 @@
 					<div class="quest hide">
 						<div class="quest_list">
 							<ul class="in_progress_quest">
-								
 							</ul>
 							<ul class="complete_quest">
-								
 							</ul>
 						</div>
 						<div class="quest_detail">
@@ -179,12 +174,10 @@
 			</div>
 		</div>
 		<div class="visit_list_frame">
-			<div class="visit_list_window">
+			<div class="visit_list_window hide">
 				<div style="position:absolute;right:0"><input type="button" class="close" value="닫기"></div>
 				<div class="visit_list">
 					<ul>
-						<li class="select_visit_npc" id="npc_0"><img src="npc/npc.png"><div class="npc_name">NPC1</div></li>
-						<li class="select_visit_npc" id="npc_1"><img src="npc/npc.png"><div class="npc_name">NPC2</div></li>
 					</ul>
 				</div>
 			</div>
@@ -206,15 +199,16 @@
 			});
 			$("#visit").click(function(event)
 			{
-				for(var i = 0; i < npcs_info.length; i++)
-				{
-					$(".visit_list > ul").append("<li class='select_visit_npc' id='npc_"+i+"'><img src='npc/npc.png'><div class='npc_name'>"+npcs_info[i]['name']+"</div></li>");
-				}
 				$(".visit_list_window").removeClass("hide");
 			});
 			$("body").on("click", ".select_visit_npc", function()
 			{
-				
+				npcs = [];
+				$('.npc_list > ul').empty();
+				$(".visit_list_window").addClass("hide");
+				cur_state=state['encounter'];
+				createNpc($(this).attr("id").split("_")[1]);
+				$(".select_npc")[0].click();
 			});
 			var quest_condition = {nothing:0, first_meet:1, in_progress_quest:2, complete_quest:3, incomplete_quest:4, check_stat:5};
 			var event_dialogue = {nothing:1, next_dialogue:2, move_location:3, give_item:4, give_money:5, change_npc:6, give_effect:7, add_quest:8, complete_quest:9};
@@ -232,6 +226,7 @@
 					{
 						cur_dialogue = result[dialogue_id];
 						$(".dialogue_content").text(active_unit['char_name']+" : "+result[dialogue_id]['content']);
+						$(".dialogue_select > ul").append("<li class='first_answer' id='back'>"+"뒤로"+"</li>");
 						for(var answer in result[dialogue_id]['answer'])
 						{
 							$(".dialogue_select > ul").append("<li class='select_answer' id='"+answer+"'>"+result[dialogue_id]['answer'][answer]['answer_content']+"</li>");
@@ -249,11 +244,11 @@
 				var target = target || active_unit;
 				$(".dialogue_content").text("");
 				$(".dialogue_select > ul").empty();
-				$(".dialogue_content").text(target['char_name']+" : 무슨 일이신가요?");
+				$(".dialogue_content").text(target['char_name']+" : what?");
 				//$(".dialogue_select > ul").append("<li class='first_answer' id='trade'>거래</li>");
-				$(".dialogue_select > ul").append("<li class='first_answer' id='quest'>퀘스트</li>");
+				$(".dialogue_select > ul").append("<li class='first_answer' id='quest'>도와줄까?</li>");
 				$(".dialogue_select > ul").append("<li class='first_answer' id='ip_quest'>진행 퀘스트</li>");
-				$(".dialogue_select > ul").append("<li class='first_answer' id='quit'>X</li>");
+				$(".dialogue_select > ul").append("<li class='first_answer' id='quit'>ㄲㅈ</li>");
 			}
 			$("body").on("click", ".first_answer", function(event)
 			{
@@ -267,7 +262,8 @@
 					async:false,
 					success:function(result)
 					{
-						for(var j = 0; j < active_unit['quest'].length; j++)
+						if(active_unit['quest'] === undefined) active_unit['quest'] = [];
+						for(var j = 0, is_complete = 0; j < active_unit['quest'].length; j++, is_complete = 0)
 						{
 							for(var i = 0; i < player['quest_state']['in_progress'].length; i++)
 							{
@@ -281,11 +277,13 @@
 							{
 								if(player['quest_state']['complete'][i] == active_unit['quest'][j])
 								{
-									continue;
+									is_complete = 1;
+									break;
 								}
 							}
-							changeDialogue(result[active_unit['quest'][j]]['begin_dialogue']);
+							//if(is_complete != 1) changeDialogue(result[active_unit['quest'][j]]['begin_dialogue']);
 						}
+						changeDialogue(0);
 					}
 					});
 				}
@@ -490,9 +488,8 @@
 				giveItem(player, 4);
 				giveItem(player, 5);
 				reload(player);
-				addQuest(1);
-				moveLocation(0);
-				$("#explore").click();
+				moveLocation(1);
+				//$("#explore").click();
 				if(active_unit.sp > 0) $(".inc_stat").removeClass("hide");
 				//$("#test").click();
 			});

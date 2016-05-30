@@ -223,15 +223,18 @@ Npc.prototype.createNpc = function(npc)
 	this.base_int = this.stat_int;
 	this.base_end = this.stat_end;
 	active_unit_inventory = {};
+	if(npc['quest'] === undefined) npc['quest'] = [];
 	for(var i = 0; i < npc['quest'].length; i++)
 	{
 		this.quest.push(npc['quest'][i]);
 	}
+	if(npc['inventory'] === undefined) npc['inventory'] = [];
 	for(var i = 0; i < npc['inventory'].length; i++)
 	{
 		giveItem(this, npc['inventory'][i]);
 	}
-	addMagicEffect(this, {name:cur_location_info['name'],effect_name:"location_"+cur_location_info['id'], duration:"passive", effect:cur_location_info['location_effect']});
+	if(cur_location_info['location_effect'][0]['id'] != 0) addMagicEffect(this, {name:cur_location_info['name'],effect_name:"location_"+cur_location_info['id'], duration:"passive", effect:cur_location_info['location_effect']});
+	if(npc['equip_slot'] === undefined) npc['equip_slot'] = [];
 	for(var i = 0; i < npc['equip_slot'].length; i++)
 	{
 		equipItem(this, npc['equip_slot'][i]);
@@ -779,15 +782,84 @@ var createMonster = function(num)
 }
 var createNpc = function(group)
 {
-	for(var i=0, npc, select_npc; i < npcs_info[group].length; i++)
+	for(var i in npcs_info[group]['npcs'])
 	{
-		npc=new Npc();
-		select_npc = npcs_info[group][i];
+		var npc=new Npc();
+		select_npc = npcs_info[group]['npcs'][i];
 		npc.createNpc(select_npc);
 		addCharList(npc);
 	}
 }
-$('.inc_stat > input[type=button]').click(function(event)
+$('.player_info .inc_stat > input[type=button]').click(function(event)
+{
+	event.preventDefault();
+	var chg_str = player['base_str'];
+	var chg_agi = player['base_agi'];
+	var chg_int = player['base_int'];
+	var chg_end = player['base_end'];
+	var item_id = [];
+	for(var slot in player.equip_slot)
+	{
+		if(slot == "w_hands")
+		{
+			if(player.equip_slot[slot][0] != "none")
+			{
+				item_id.push(player.equip_slot[slot][0]);
+				equipItem(player, player.equip_slot[slot][0]);
+			}
+			if(player.equip_slot[slot][1] != "none")
+			{
+				item_id.push(player.equip_slot[slot][1]);
+				equipItem(player, player.equip_slot[slot][1]);
+			}
+		}
+		else if(player.equip_slot[slot] != "none")
+		{
+			item_id.push(player.equip_slot[slot]);
+			equipItem(player, player.equip_slot[slot]);
+		}
+	}
+	player["base_"+$(this).attr('id').split("_")[1]] += 1;
+	player[$(this).attr('id')] += 1;
+	player.sp--;
+	if($(this).attr('id') == "stat_str")
+	{
+		player.base_ad += 1;
+		player.ad += 1;
+		player.carry_weight += 1;
+		reload(player, "ad");
+		reload(player, "carry_weight");
+	}
+	else if($(this).attr('id') == "stat_agi")
+	{
+		player.base_as += 1;
+		player.base_ms += 1;
+		player.as += 1;
+		player.ms += 1;
+		reload(player, "as");
+		reload(player, "ms");
+	}
+	else if($(this).attr('id') == "stat_int")
+	{
+		player.base_mp += 1;
+		player.max_mp += 1;
+		reload(player, "max_mp");
+	}
+	else
+	{
+		player.base_hp += 2;
+		player.max_hp += 2;
+		reload(player, "max_hp");
+	}
+	if(player.sp <= 0) $('.inc_stat').addClass("hide");
+	reload(player, $(this).attr('id'));
+	reload(player, "sp");
+	for(var i = 0; i < item_id.length; i++)
+	{
+		equipItem(player, item_id[i]);
+	}
+});
+$('.npc_info .inc_stat > input[type=button]').click(function(event)
 {
 	event.preventDefault();
 	var chg_str = active_unit['base_str'];
@@ -797,7 +869,20 @@ $('.inc_stat > input[type=button]').click(function(event)
 	var item_id = [];
 	for(var slot in active_unit.equip_slot)
 	{
-		if(active_unit.equip_slot[slot] != "none")
+		if(slot == "w_hands")
+		{
+			if(active_unit.equip_slot[slot][0] != "none")
+			{
+				item_id.push(active_unit.equip_slot[slot][0]);
+				equipItem(active_unit, active_unit.equip_slot[slot][0]);
+			}
+			if(active_unit.equip_slot[slot][1] != "none")
+			{
+				item_id.push(active_unit.equip_slot[slot][1]);
+				equipItem(active_unit, active_unit.equip_slot[slot][1]);
+			}
+		}
+		else if(active_unit.equip_slot[slot] != "none")
 		{
 			item_id.push(active_unit.equip_slot[slot]);
 			equipItem(active_unit, active_unit.equip_slot[slot]);
@@ -847,6 +932,8 @@ $('body').on('click', '.select_npc', function(event)
 {
 	event.preventDefault();
 	finishDialogue();
+	$("#attack").removeClass("hide");
+	$("#dialogue").removeClass("hide");
 	$('.select_follower').removeClass("active");
 	$('.select_npc').removeClass("active");
 	$(this).addClass("active");
@@ -1023,6 +1110,8 @@ var moveLocation = function(id)
 	move_locations = [];
 	//sub_locations = [];
 	//main_location = {};
+	$("#attack").addClass("hide");
+	$("#dialogue").addClass("hide");
 	for(var i = Object.keys(npcs).length-1; i >= 0; i--)
 	{
 		delCharList(npcs[i]);
@@ -1119,6 +1208,11 @@ var moveLocation = function(id)
 	}
 	$(".bgimg").css("background-image", "url('bg/"+location['bg']+"')");
 	$(".location_name").html(location['name']);
+	$(".visit_list > ul").empty();
+	for(var i = 0; i < npcs_info.length; i++)
+	{
+		$(".visit_list > ul").append("<li class='select_visit_npc' id='npc_"+i+"'><img src='npc/"+npcs_info[i]['npcs'][0]['image']+"'><div class='npc_name'>"+npcs_info[i]['group_name']+"</div></li>");
+	}
 }
 $("#move_location").click(function(event)
 {
@@ -1357,7 +1451,6 @@ var addMagicEffect = function(target, effect)
 }
 var delMagicEffect = function(target, effect_id)
 {
-	console.log(effect_id);
 	for(var effect in target.magic_effect)
 	{
 		if(effect == effect_id)
