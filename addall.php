@@ -39,27 +39,48 @@
 					$src = $_FILES['image']['tmp_name'];
 					move_uploaded_file($src, $dest);
 				}
+				$resistance = 0;
+				$debuff = 0;
+				$buff = 0;
+				$silence = 0;
 				foreach($location_effect as $val)
 				{
-					if($val == "resistance") $location_effects[] = array("id" => 7, "type" => $resist_type);
-					else if($val == "debuff") $location_effects[] = array("id" => 8, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type);
-					else if($val == "buff") $location_effects[] = array("id" => 9, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type);
-					else if($val == "silence") $location_effects[] = array("id" => 3);
-					else if($val == "nothing"); $location_effects[] = array("id" => 0);
+					if($val == "resistance") 
+						{
+							$location_effects[] = array("id" => 7, "type" => $resist_type[$resistance]);
+							$resistance++;
+						}
+						else if($val == "debuff")
+						{
+							$location_effects[] = array("id" => 8, "type" => $debuff_type[$debuff], "intensity" => $debuff_intensity[$debuff], "intensity_type" => $debuff_intensity_type[$debuff]);
+							$debuff++;
+						}
+						else if($val == "buff") 
+						{
+							$location_effects[] = array("id" => 9, "type" => $buff_type[$buff], "intensity" => $buff_intensity[$buff], "intensity_type" => $buff_intensity_type[$buff]);
+							$buff++;
+						}
+						else if($val == "silence")
+						{
+							$location_effects[] = array("id" => 3);
+							$silence++;
+						}
 				}
 				$move_locations = explode(",", $move_location);
 				$sub_locations = explode(",", $sub_location);
-				$encounter_ids = explode(",", $encounter_id);
-				if(!empty($move_locations)) $data['move_location'] = $move_locations;
-				if(!empty($sub_locations)) $data['sub_location'] = $sub_locations;
-				if(!empty($encounter_ids)) $data['encounter_id'] = $encounter_ids;
-				if(!empty($level)) $data['level'] = $level;
 				$data['id'] = $id;
 				$data["type"]=$type;
 				$data["name"]=$name;
 				$data["bg"]=$filename;
+				if($move_locations[0] != "") $data['move_location'] = $move_locations;
+				if($sub_locations[0] != "") $data['sub_location'] = $sub_locations;
+				//if(!empty($level)) $data['level'] = $level;
+				if($location_effects  != "") $data['location_effect'] = $location_effects;
+				if($encounter_npc_id != "") $data['encounter_id']['npc'] = explode(",", $encounter_npc_id);
+				if($encounter_monster_id  != "") $data['encounter_id']['monster'] = explode(",", $encounter_monster_id);
 				$locations[] = $data;
 				$locations = json_encode($locations);
+				print_r($debuff_intensity_type);
 				file_put_contents("location.json", $locations);
 				print "<script>history.go(-1)</script>";
 			}else print "<script>alert('이미지 파일만 업로드할 수 있습니다.');history.go(-1)</script>";
@@ -68,7 +89,9 @@
 		{
 			$json_npcs = file_get_contents("npc.json");
 			$npcs = json_decode($json_npcs, true);
-			$npc_id = count($npcs);
+			$group_id = count($npcs);
+			if(!empty($npcs)) $npc_id = $npcs[count($npcs)-1]['npcs'][count($npcs[count($npcs)-1]['npcs'])-1]['id']+1;
+			else $npc_id = 0;
 			foreach($_FILES["image"]["tmp_name"] as $key => $val)
 			{
 				$check[$key] = @getimagesize($_FILES["image"]["tmp_name"][$key]);
@@ -110,20 +133,22 @@
 					}
 					$data["npcs"][$key]['char_name'] = $name[$key];
 					$data["npcs"][$key]['level'] = $level[$key];
+					$data["npcs"][$key]['id'] = $npc_id+$key;
+					$data["npcs"][$key]['exp_gain'] = $exp_gain[$key];
 					$data["npcs"][$key]['image'] = $filename[$key];
-					if(!empty($dialogue[$key])) $data["npcs"][$key]['dialogue'] = explode(",", $dialogue[$key]);
-					if(!empty($max_hp[$key])) $data["npcs"][$key]['max_hp'] = $max_hp[$key];
-					if(!empty($max_mp[$key])) $data["npcs"][$key]['max_mp'] = $max_mp[$key];
-					if(!empty($ad[$key])) $data["npcs"][$key]['ad'] = $ad[$key];
-					if(!empty($as[$key])) $data["npcs"][$key]['as'] = $as[$key];
-					if(!empty($ms[$key])) $data["npcs"][$key]['ms'] = $ms[$key];
-					if(!empty($armor[$key])) $data["npcs"][$key]['armor'] = $armor[$key];
-					if(!empty($resist[$key])) $data["npcs"][$key]['resist'] = $resist[$key];
-					if(!empty($stat_str[$key])) $data["npcs"][$key]['stat_str'] = $stat_str[$key];
-					if(!empty($stat_agi[$key])) $data["npcs"][$key]['stat_agi'] = $stat_agi[$key];
-					if(!empty($stat_int[$key])) $data["npcs"][$key]['stat_int'] = $stat_int[$key];
-					if(!empty($stat_end[$key])) $data["npcs"][$key]['stat_end'] = $stat_end[$key];
-					if(!empty($inventory[$key]))
+					if($dialogue[$key] != "") $data["npcs"][$key]['dialogue'] = explode(",", $dialogue[$key]);
+					if($max_hp[$key] != "") $data["npcs"][$key]['max_hp'] = $max_hp[$key];
+					if($max_mp[$key] != "") $data["npcs"][$key]['max_mp'] = $max_mp[$key];
+					if($ad[$key] != "") $data["npcs"][$key]['ad'] = $ad[$key];
+					if($as[$key] != "") $data["npcs"][$key]['as'] = $as[$key];
+					if($ms[$key] != "") $data["npcs"][$key]['ms'] = $ms[$key];
+					if($armor[$key] != "") $data["npcs"][$key]['armor'] = $armor[$key];
+					if($resist[$key] != "") $data["npcs"][$key]['resist'] = $resist[$key];
+					if($stat_str[$key] != "") $data["npcs"][$key]['stat_str'] = $stat_str[$key];
+					if($stat_agi[$key] != "") $data["npcs"][$key]['stat_agi'] = $stat_agi[$key];
+					if($stat_int[$key] != "") $data["npcs"][$key]['stat_int'] = $stat_int[$key];
+					if($stat_end[$key] != "") $data["npcs"][$key]['stat_end'] = $stat_end[$key];
+					if($inventory[$key] != "")
 					{
 						$data["npcs"][$key]['inventory'] = array();
 						$inventory_temp = explode(",",$inventory[$key]);
@@ -132,17 +157,17 @@
 							$data["npcs"][$key]['inventory'][$i] = $inventory_temp[$i];
 						}
 					}
-					if(!empty($equip_slot[$key]))
+					if($equip_slot[$key] != "")
 					{
 						$data["npcs"][$key]['equip_slot'] = explode(",", $equip_slot[$key]);
 					}
-					if(!empty($quest[$key]))
+					if($quest[$key] != "")
 					{
 						$data["npcs"][$key]['quest'] = explode(",", $quest[$key]);
 					}
 				}
 				$data['group_name'] = $group_name;
-				$data['id'] = $npc_id;
+				$data['group_id'] = $group_id;
 				$npcs[] = $data;
 				$npcs = json_encode($npcs);
 				file_put_contents("npc.json", $npcs);
@@ -157,7 +182,7 @@
 			$check = @getimagesize($_FILES["image"]["tmp_name"]);
 			if($check !== false) $upload = 1;
 			else $upload = 0;
-			if($upload == 1)
+			if(1 == 1)
 			{
 				$name = strip_tags($name);
 				$desc = strip_tags($desc);
@@ -184,18 +209,19 @@
 				$data['id'] = $monster_id;
 				$data['char_name'] = $name;
 				$data['level'] = $level;
-				if(!empty($max_hp)) $data['max_hp'] = $max_hp;
-				if(!empty($max_mp)) $data['max_mp'] = $max_mp;
-				if(!empty($ad)) $data['ad'] = $ad;
-				if(!empty($as)) $data['as'] = $as;
-				if(!empty($ms)) $data['ms'] = $ms;
-				if(!empty($armor)) $data['armor'] = $armor;
-				if(!empty($resist)) $data['resist'] = $resist;
-				if(!empty($stat_str)) $data['stat_str'] = $stat_str;
-				if(!empty($stat_agi)) $data['stat_agi'] = $stat_agi;
-				if(!empty($stat_int)) $data['stat_int'] = $stat_int;
-				if(!empty($stat_end)) $data['stat_end'] = $stat_end;
-				if(!empty($inventory))
+				$data['exp_gain'] = $exp_gain;
+				if($max_hp != "") $data['max_hp'] = $max_hp;
+				if($max_mp != "") $data['max_mp'] = $max_mp;
+				if($ad != "") $data['ad'] = $ad;
+				if($as != "") $data['as'] = $as;
+				if($ms != "") $data['ms'] = $ms;
+				if($armor != "") $data['armor'] = $armor;
+				if($resist != "") $data['resist'] = $resist;
+				if($stat_str != "") $data['stat_str'] = $stat_str;
+				if($stat_agi != "") $data['stat_agi'] = $stat_agi;
+				if($stat_int != "") $data['stat_int'] = $stat_int;
+				if($stat_end != "") $data['stat_end'] = $stat_end;
+				if($inventory != "")
 				{
 					$data['inventory'] = array();
 					$inventory = explode(",",$inventory);
@@ -204,7 +230,7 @@
 						$data['inventory'][$i] = $inventory[$i];
 					}
 				}
-				if(!empty($equip_slot))
+				if($equip_slot != "")
 				{
 					$data['equip_slot'] = explode(",", $equip_slot);
 				}
@@ -246,22 +272,32 @@
 					$src = $_FILES['image']['tmp_name'];
 					move_uploaded_file($src, $dest);
 				}
+				$resistance = 0;
+				$debuff = 0;
+				$buff = 0;
+				$silence = 0;
 				foreach($item_effect as $val)
 				{
-					if($val == "resistance") $item_effects[] = array("id" => 7, "type" => $resist_type);
+					if($val == "resistance") 
+					{
+						$item_effects[] = array("id" => 7, "type" => $resist_type[$resistance]);
+						$resistance++;
+					}
 					else if($val == "debuff")
 					{
-						if($type == "equip") $item_effects[] = array("id" => 8, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type);
-						else $item_effects[] = array("id" => 8, "type" => $debuff_type, "intensity" => $debuff_intensity, "intensity_type" => $debuff_intensity_type);
-						
+						$item_effects[] = array("id" => 8, "type" => $debuff_type[$debuff], "intensity" => $debuff_intensity[$debuff], "intensity_type" => $debuff_intensity_type[$debuff]);
+						$debuff++;
 					}
-					else if($val == "buff")
+					else if($val == "buff") 
 					{
-						if($type == "equip") $item_effects[] = array("id" => 9, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type);
-						else $item_effects[] = array("id" => 9, "type" => $buff_type, "intensity" => $buff_intensity, "intensity_type" => $buff_intensity_type);
+						$item_effects[] = array("id" => 9, "type" => $buff_type[$buff], "intensity" => $buff_intensity[$buff], "intensity_type" => $buff_intensity_type[$buff]);
+						$buff++;
 					}
-					else if($val == "silence") $item_effects[] = array("id" => 3);
-					else if($val == "nothing") $item_effects[] = array("id" => 0);
+					else if($val == "silence")
+					{
+						$item_effects[] = array("id" => 3);
+						$silence++;
+					}
 				}
 				$data["id"] = $item_id;
 				$data["type"]=$type;
@@ -269,10 +305,10 @@
 				$data["desc"]=$desc;
 				$data["image"]=$filename;
 				$data['weight']=$weight;
-				if(!empty($item_effects)) $data["item_effect"] = $item_effects;
-				if(!empty($equip_slot)) $data["equip_slot"] = $equip_slot;
-				if(!empty($weapon_type)) $data["weapon_type"] = $weapon_type;
-				if(!empty($effect_duration)) $data["effect_duration"]=$effect_duration;
+				if($item_effects != "") $data["item_effect"] = $item_effects;
+				if($equip_slot != "") $data["equip_slot"] = $equip_slot;
+				if($weapon_type != "") $data["weapon_type"] = $weapon_type;
+				if($effect_duration != "") $data["effect_duration"]=$effect_duration;
 				
 				$items[] = $data;
 				$items = json_encode($items);
@@ -308,6 +344,7 @@
 				{
 					$data['complete_condition'][$key]['condition']['npc'] = $give_item_npc[$key];
 					$data['complete_condition'][$key]['condition']['item'] = $give_item_id[$key];
+					$data['complete_condition'][$key]['condition']['item_num'] = $give_item_num[$key];
 				}
 				$data['complete_condition'][$key]['state'] = 0;
 			}
@@ -336,10 +373,47 @@
 			foreach($answer_event_type as $key => $val)
 			{
 				$data['answer'][$key]['answer_event_type'] = $val;
-			}
-			foreach($answer_event as $key => $val)
-			{
-				$data['answer'][$key]['answer_event'] = $val;
+				if($data['answer'][$key]['answer_event_type'] == "7")
+				{
+					$key-1 < 0?$limit = 0: $limit = $effect_num[$key-1];
+					for($i = $limit, $j = 0, $resistance=0, $debuff=0, $buff=0, $silence=0; $i < $effect_num[$key]+$limit; $i++, $j++)
+					{
+						if($answer_event[$i] == "resistance") 
+						{
+							$data['answer'][$key]['answer_event'][$j] = array("id" => 7, "type" => $resist_type[$resistance]);
+							$resistance++;
+						}
+						else if($answer_event[$i] == "debuff")
+						{
+							$data['answer'][$key]['answer_event'][$j] = array("id" => 8, "type" => $debuff_type[$debuff], "intensity" => $debuff_intensity[$debuff], "intensity_type" => $debuff_intensity_type[$debuff]);
+							$debuff++;
+						}
+						else if($answer_event[$i] == "buff") 
+						{
+							$data['answer'][$key]['answer_event'][$j] = array("id" => 9, "type" => $buff_type[$buff], "intensity" => $buff_intensity[$buff], "intensity_type" => $buff_intensity_type[$buff]);
+							$buff++;
+						}
+						else if($answer_event[$i] == "silence")
+						{
+							$data['answer'][$key]['answer_event'][$j] = array("id" => 3);
+							$silence++;
+						}
+					}
+				}
+				else if($data['answer'][$key]['answer_event_type'] == "4")
+				{
+					foreach($answer_event as $key => $val)
+					{
+						$data['answer'][$key]['answer_event'] = explode(",", $val);
+					}
+				}
+				else
+				{
+					foreach($answer_event as $key => $val)
+					{
+						$data['answer'][$key]['answer_event'] = $val;
+					}
+				}
 			}
 			$dialogues[] = $data;
 			$dialogues = json_encode($dialogues);
@@ -368,12 +442,13 @@
 			<div class="add_info">
 				타입 : <select name="type"><option value="town">마을<option value="field">필드<option value="dungeon">던전</select><br>
 				이름 : <input type="text" name="name" id="add_name"><span></span><br>
-				장소효과 : <select name="location_effect[]" class="magic_effect" id="location_effect" multiple><option value="nothing" selected>없음<option value="silence">침묵<option value="resistance">면역<option value="debuff">약화<option value="buff">강화</select><div></div>
+				장소효과 : <select name="location_effect[]" class="magic_effect" id="location_effect"><option value="nothing" selected>없음<option value="silence">침묵<option value="resistance">면역<option value="debuff">약화<option value="buff">강화</select><div></div><input type="button" id="add_location_effect" value="이펙트 추가"><div></div>
 				배경 : <input type="file" name="image" accept="image/*"><br>
 				레벨대 : <input type="number" name="level" min="1" max="150"><br>
 				하위 지역 ID : <input type="text" name="sub_location"><br>
 				이동 가능 지역 ID : <input type="text" name="move_location"><br>
-				인카운터 NPC ID : <input type="text" name="encounter_id"><br>
+				인카운터 NPC ID : <input type="text" name="encounter_npc_id"><br>
+				인카운터 몬스터 ID : <input type="text" name="encounter_monster_id"><br>
 			</div>
 			<input type="submit">
 		</form>
@@ -382,33 +457,32 @@
 		<script>
 			var regex = new RegExp("[^ \t\r\n\v\f]{5,20}");
 			var category = "location";
+			var answer_id = 0;
 			$('body').on('change', '.magic_effect', function(event)
 			{
 				var magic_effect=$(this).val();
 				$(this).next().html("");
 				if($("#item_type").val() == "consume") $(this).next().append("지속시간 : <input type='range' name='effect_duration' min='5' max='100' step='5'><span></span><br>");
-				for(var val in magic_effect)
+				if(magic_effect == "silence" && category == "item")
 				{
-					if(magic_effect[val] == "silence" && category == "item")
-					{
-						//$(this).next().append("지속시간 : <input type='range' name='silence_duration' min='5' max='100' step='5'><span></span><br>");
-					}
-					if(magic_effect[val] == "resistance")
-					{
-						$(this).next().append("면역효과 : <select name='resist_type'><option value='physical'>물리<option value='magic'>마법</select><br>");
-					}
-					if(magic_effect[val] == "debuff")
-					{
-						$(this).next().append("약화효과 : <select name='debuff_type'><option value='stat_str'>힘<option value='stat_agi'>민첩<option value='stat_int'>지능<option value='stat_end'>인내<option value='ad'>공격력<option value='as'>공격속도<option value='max_hp'>HP<option value='max_mp'>MP<option value='ms'>이동속도<option value='armor'>방어력<option value='resist'>마법저항력</select><br>");
-						$(this).next().append("약화효과강도 : <input type='range' name='debuff_intensity' min='5' max='1000' step='5'><span></span><br><input type='radio' name='debuff_intensity_type' value='percent'>%<br><input type='radio' name='debuff_intensity_type' value='value' checked>값<br>");
-						
-					}
-					if(magic_effect[val] == "buff")
-					{
-						$(this).next().append("강화효과 : <select name='buff_type'><option value='stat_str'>힘<option value='stat_agi'>민첩<option value='stat_int'>지능<option value='stat_end'>인내<option value='ad'>공격력<option value='as'>공격속도<option value='max_hp'>HP<option value='max_mp'>MP<option value='ms'>이동속도<option value='armor'>방어력<option value='resist'>마법저항력</select><br>");
-						$(this).next().append("강화효과강도 : <input type='range' name='buff_intensity' min='5' max='1000' step='5'><span></span><br><input type='radio' name='buff_intensity_type' value='percent'>%<br><input type='radio' name='buff_intensity_type' value='value' checked>값<br>");
-					}
+					//$(this).next().append("지속시간 : <input type='range' name='silence_duration' min='5' max='100' step='5'><span></span><br>");
 				}
+				if(magic_effect == "resistance")
+				{
+					$(this).next().append("면역효과 : <select name='resist_type[]'><option value='physical'>물리<option value='magic'>마법</select><br>");
+				}
+				if(magic_effect == "debuff")
+				{
+					$(this).next().append("약화효과 : <select name='debuff_type[]'><option value='stat_str'>힘<option value='stat_agi'>민첩<option value='stat_int'>지능<option value='stat_end'>인내<option value='ad'>공격력<option value='as'>공격속도<option value='max_hp'>HP<option value='max_mp'>MP<option value='ms'>이동속도<option value='armor'>방어력<option value='resist'>마법저항력</select><br>");
+					$(this).next().append("약화효과강도 : <input type='range' name='debuff_intensity[]' min='5' max='1000' step='5'><span></span><br><input type='checkbox' name='debuff_intensity_type[]' value='percent'>%<br><input type='checkbox' name='debuff_intensity_type[]' value='value' checked>값<br>");
+					
+				}
+				if(magic_effect == "buff")
+				{
+					$(this).next().append("강화효과 : <select name='buff_type[]'><option value='stat_str'>힘<option value='stat_agi'>민첩<option value='stat_int'>지능<option value='stat_end'>인내<option value='ad'>공격력<option value='as'>공격속도<option value='max_hp'>HP<option value='max_mp'>MP<option value='ms'>이동속도<option value='armor'>방어력<option value='resist'>마법저항력</select><br>");
+					$(this).next().append("강화효과강도 : <input type='range' name='buff_intensity[]' min='5' max='1000' step='5'><span></span><br><input type='checkbox' name='buff_intensity_type[]' value='percent'>%<br><input type='checkbox' name='buff_intensity_type[]' value='value' checked>값<br>");
+				}
+				$(this).next().append("<input type='hidden' name='effect_num[]' value='"+magic_effect.length+"'>");
 			});
 			$('body').on('change', 'input[type="range"]', function(event)
 			{
@@ -441,7 +515,8 @@
 					'착용아이템 : <input type="text" name="equip_slot[]"> ,로 구분, 같은 부위 아이템 착용시키면 뒤에 쓴 것 적용, 인벤토리에 있는 순서를 써야함(0부터)<br>'+
 					'퀘스트 : <input type="text" name="quest[]"> ,로 구분<br>'+
 					'대사 : <input type="text" name="dialogue[]"> ,로 구분<br>'+
-					'돈 : <input type="number" name="money[]"> <input type="button" id="add_npc" value="NPC 추가"><div></div>');
+					'돈 : <input type="number" name="money[]" value="100">'+
+					'경험치 : <input type="number" name="exp_gain[]" value="10"> <input type="button" id="add_npc" value="NPC 추가"><div></div>');
 				}
 				if(category == "monster")
 				{
@@ -461,18 +536,20 @@
 					'인내 : <input type="number" name="stat_end"><br>'+
 					'인벤토리 : <input type="text" name="inventory"> ,로 구분<br>'+
 					'착용아이템 : <input type="text" name="equip_slot"> ,로 구분, 같은 부위 아이템 착용시키면 뒤에 쓴 것 적용, 인벤토리에 있는 순서를 써야함(0부터)<br>'+
-					'돈 : <input type="number" name="money"><br>');
+					'돈 : <input type="number" name="money"><br>'+
+					'경험치 : <input type="number" name="exp_gain"><br>');
 				}
 				else if(category == "location")
 				{
 					$(".add_info").append('타입 : <select name="type"><option value="town">마을<option value="field">필드<option value="dungeon">던전</select><br>'+
 					'이름 : <input type="text" name="name" id="add_name"><span></span><br>'+
-					'장소효과 : <select name="location_effect[]" class="magic_effect" id="location_effect" multiple><option value="nothing" selected>없음<option value="silence">침묵<option value="resistance">면역<option value="debuff">약화<option value="buff">강화</select><div></div>'+
+					'장소효과 : <select name="location_effect[]" class="magic_effect" id="location_effect"><option value="nothing" selected>없음<option value="silence">침묵<option value="resistance">면역<option value="debuff">약화<option value="buff">강화</select><div></div><input type="button" id="add_location_effect" value="이펙트 추가"><div></div>'+
 					'배경 : <input type="file" name="bg" accept="image/*"><br>'+
 					'레벨대 : <input type="number" name="level" min="1" max="150"><br>'+
 					'하위 지역 ID : <input type="text" name="sub_location"><br>'+
 					'이동 가능 지역 ID : <input type="text" name="move_location"><br>'+
-					'인카운터 NPC ID : <input type="text" name="encounter_id"><br>');
+					'인카운터 NPC ID : <input type="text" name="encounter_npc_id"><br>'+
+					'인카운터 몬스터 ID : <input type="text" name="encounter_monster_id"><br>');
 				}
 				else if(category == "quest")
 				{
@@ -496,7 +573,7 @@
 					'사진 : <input type="file" name="image" accept="image/*"><br>'+
 					'이름 : <input type="text" name="name"><span></span><br>'+
 					'설명 : <input type="text" name="desc" id="add_desc"><br>'+
-					'아이템효과 : <select name="item_effect[]" class="magic_effect" id="item_effect" multiple><option value="nothing" selected>없음<option value="silence">침묵<option value="resistance">면역<option value="debuff">약화<option value="buff">강화</select><div></div>'+
+					'아이템효과 : <select name="item_effect[]" class="magic_effect" id="item_effect"><option value="nothing" selected>없음<option value="silence">침묵<option value="resistance">면역<option value="debuff">약화<option value="buff">강화</select><div></div><input type="button" id="add_item_effect" value="이펙트 추가"><div></div>'+
 					'무게 : <input type="number" name="weight" value="1"><br>'+
 					'가격 : <input type="number" name="price" value="100"><br>');
 				}
@@ -537,11 +614,13 @@
 					{
 						$(this).next().append("NPC ID : <input type='text' name='give_item_npc[]'>");
 						$(this).next().append("아이템 ID : <input type='text' name='give_item_id[]'>");
+						$(this).next().append("아이템 개수 : <input type='number' name='give_item_num[]'>");
 					}
 				}
 			});
 			$("body").on("click", "#add_answer", function(event)
 			{
+				answer_id++;
 				$(this).next().append("대답 : <input type='text' name='answer_content[]'><br>대답 시 이벤트 : <select name='answer_event_type[]' id='dialogue_event' multiple><option value='1' selected>없음<option value='2'>다음 대사<option value='3'>장소 이동<option value='4'>아이템 주기<option value='5'>돈 주기<option value='6'>npc 바꾸기<option value='7'>이펙트주기<option value='8'>퀘스트 추가<option value='9'>퀘스트 완료</select><div><input type='hidden' name='answer_event[]' value='0'></div> <input type='button' id='add_answer' value='대답 추가'><div></div>");
 				$(this).remove();
 			});
@@ -555,15 +634,36 @@
 				}
 				else if(dialogue_event == "2")
 				{
-					$(this).next().append("다음 대사 : <input type='number' name='answer_event[]'>");
+					$(this).next().append("다음 대사 ID : <input type='number' name='answer_event[]'>");
+				}
+				else if(dialogue_event == "3")
+				{
+					$(this).next().append("장소 ID : <input type='number' name='answer_event[]'>");
+				}
+				else if(dialogue_event == "4")
+				{
+					$(this).next().append("아이템 ID : <input type='number' name='answer_event[]'>");
+				}
+				else if(dialogue_event == "5")
+				{
+					$(this).next().append("액수 : <input type='number' name='answer_event[]'>");
+				}
+				else if(dialogue_event == "6")
+				{
+					$(this).next().append("NPC ID : <input type='number' name='answer_event[]'>");
+				}
+				else if(dialogue_event == "7")
+				{
+					$(this).next().append("이펙트 : <select name='answer_event[]' class='magic_effect'><option value='nothing' selected>없음<option value='silence'>침묵<option value='resistance'>면역<option value='debuff'>약화<option value='buff'>강화</select><div></div><input type='button' id='add_dialogue_effect' value='이펙트 추가'><div></div>");
+					$(this).next().append("지속시간 : <input type='range' name='effect_duration' min='5' max='100' step='5'><span></span><br>");
 				}
 				else if(dialogue_event == "8")
 				{
-					$(this).next().append("추가할 퀘스트 : <input type='number' name='answer_event[]'>");
+					$(this).next().append("추가할 퀘스트 ID : <input type='number' name='answer_event[]'>");
 				}
 				else if(dialogue_event == "9")
 				{
-					$(this).next().append("완료할 퀘스트 : <input type='number' name='answer_event[]'>");
+					$(this).next().append("완료할 퀘스트 ID : <input type='number' name='answer_event[]'>");
 				}
 			});
 			$("body").on("change", "#quest_reward", function(event)
@@ -602,7 +702,22 @@
 					'착용아이템 : <input type="text" name="equip_slot[]"> ,로 구분, 같은 부위 아이템 착용시키면 뒤에 쓴 것 적용, 인벤토리에 있는 순서를 써야함(0부터)<br>'+
 					'퀘스트 : <input type="text" name="quest[]"> ,로 구분<br>'+
 					'대사 : <input type="text" name="dialogue[]"> ,로 구분<br>'+
-					'돈 : <input type="number" name="money[]"> <input type="button" id="add_npc" value="NPC 추가"><div></div>');
+					'돈 : <input type="number" name="money[]">경험치 : <input type="number" name="exp_gain[]" value="10"> <input type="button" id="add_npc" value="NPC 추가"><div></div>');
+				$(this).remove();
+			});
+			$("body").on("click", "#add_location_effect", function()
+			{
+				$(this).next().append('장소효과 : <select name="location_effect[]" class="magic_effect" id="location_effect"><option value="nothing" selected>없음<option value="silence">침묵<option value="resistance">면역<option value="debuff">약화<option value="buff">강화</select><div></div><input type="button" id="add_location_effect" value="이펙트 추가"><div></div>');
+				$(this).remove();
+			});
+			$("body").on("click", "#add_dialogue_effect", function()
+			{
+				$(this).next().append('장소효과 : <select name="answer_event[]" class="magic_effect" id="location_effect"><option value="nothing" selected>없음<option value="silence">침묵<option value="resistance">면역<option value="debuff">약화<option value="buff">강화</select><div></div><input type="button" id="add_dialogue_effect" value="이펙트 추가"><div></div>');
+				$(this).remove();
+			});
+			$("body").on("click", "#add_item_effect", function()
+			{
+				$(this).next().append('장소효과 : <select name="item_effect[]" class="magic_effect" id="location_effect"><option value="nothing" selected>없음<option value="silence">침묵<option value="resistance">면역<option value="debuff">약화<option value="buff">강화</select><div></div><input type="button" id="add_item_effect" value="이펙트 추가"><div></div>');
 				$(this).remove();
 			});
 			/*$('#additem').submit(function()

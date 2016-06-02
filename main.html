@@ -194,7 +194,8 @@
 			$("#test").click(function(event)
 			{
 				event.preventDefault();
-				$("#dialogue").click();
+				//$("#dialogue").click();
+				$("#move_location").click();
 				//convertType(active_unit);
 			});
 			$("#visit").click(function(event)
@@ -281,7 +282,11 @@
 									break;
 								}
 							}
-							//if(is_complete != 1) changeDialogue(result[active_unit['quest'][j]]['begin_dialogue']);
+							if(is_complete != 1)
+							{
+								changeDialogue(result[active_unit['quest'][j]]['begin_dialogue']);
+								return;
+							}
 						}
 						changeDialogue(0);
 					}
@@ -334,12 +339,17 @@
 					}
 					else if(quest['complete_condition'][i]['event'] == quest_complete_condition['give_item'])
 					{
+						var item_num = 0;
 						for(var item in player.inventory)
 						{
 							if(player.inventory[item] == quest['complete_condition'][i]['condition']['item'] && active_unit['id'] == quest['complete_condition'][i]['condition']['npc'])
 							{
-								quest['complete_condition'][i]['state'] = 1;
-								break;
+								if(++item_num >= quest['complete_condition'][i]['condition']['item_num'])
+								{
+									console.log(1);
+									quest['complete_condition'][i]['state'] = 1;
+									break;
+								}
 							}
 						}
 						if(quest['complete_condition'][i]['state'] != 1) complete_state = 0;
@@ -374,6 +384,31 @@
 				{
 					$(".dialogue_content").text("");
 					changeDialogue(cur_dialogue['answer'][$(this).attr("id")]['answer_event']);
+				}
+				else if(cur_dialogue['answer'][$(this).attr("id")]['answer_event_type'] == event_dialogue['move_location'])
+				{
+					$(".dialogue_content").text("");
+					moveLocation(cur_dialogue['answer'][$(this).attr("id")]['answer_event']);
+				}
+				else if(cur_dialogue['answer'][$(this).attr("id")]['answer_event_type'] == event_dialogue['give_item'])
+				{
+					$(".dialogue_content").text("");
+					giveItem(player, cur_dialogue['answer'][$(this).attr("id")]['answer_event']);
+				}
+				else if(cur_dialogue['answer'][$(this).attr("id")]['answer_event_type'] == event_dialogue['give_money'])
+				{
+					$(".dialogue_content").text("");
+					player.money += cur_dialogue['answer'][$(this).attr("id")]['answer_event'];
+				}
+				else if(cur_dialogue['answer'][$(this).attr("id")]['answer_event_type'] == event_dialogue['change_npc'])
+				{
+					$(".dialogue_content").text("");
+					player.money += cur_dialogue['answer'][$(this).attr("id")]['answer_event'];
+				}
+				else if(cur_dialogue['answer'][$(this).attr("id")]['answer_event_type'] == event_dialogue['give_effect'])
+				{
+					$(".dialogue_content").text("");
+					//addMagicEffect(player, )
 				}
 				else if(cur_dialogue['answer'][$(this).attr("id")]['answer_event_type'] == event_dialogue['add_quest'])
 				{
@@ -482,13 +517,9 @@
 				$('.player_list').append(player['char_name']+" <span id='hp'>"+player['hp']+"</span>/<span id='max_hp'>"+player['max_hp']+"</span>");
 				$(".startgame").addClass("hide");
 				giveItem(player, 0);
-				giveItem(player, 1);
-				giveItem(player, 2, 2);
-				giveItem(player, 3, 1);
-				giveItem(player, 4);
-				giveItem(player, 5);
 				reload(player);
 				moveLocation(1);
+				addQuest(0);
 				//$("#explore").click();
 				if(active_unit.sp > 0) $(".inc_stat").removeClass("hide");
 				//$("#test").click();

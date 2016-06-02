@@ -1,1 +1,1 @@
-[{"npcs":[{"char_name":"\u31441","level":"1","image":"A_Armor04.png"},{"char_name":"\u31442","level":"2","image":"A_Armor05.png"}],"group_name":"\u3144\ub4e4","id":0}]
+[{"npcs":[{"char_name":"a","level":"1","id":0,"exp_gain":"10","image":"A_Armor04_6.png","quest":["0"]}],"group_name":"a","group_id":0}]
