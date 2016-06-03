@@ -301,6 +301,18 @@
 				}
 				$data["id"] = $item_id;
 				$data["type"]=$type;
+				if($type == "consume")
+				{
+					$data["type"]=0;
+				}
+				else if($type == "equip")
+				{
+					$data["type"]=1;
+				}
+				else if($type == "etc")
+				{
+					$data["type"]=2;
+				}
 				$data["name"]=$name;
 				$data["desc"]=$desc;
 				$data["image"]=$filename;
@@ -352,11 +364,17 @@
 			{
 				if($val == "exp") $data['reward']['exp'][] = $exp_amount;
 				else if($val == "money") $data['reward']['money'][] = $money_amount;
+				else if($val == "item")
+				{
+					$data['reward']['item'] = array("id" => explode(",", $item_id), "num" => explode(",", $item_num));
+					//$data['reward']['item'] = array("num" => explode(",", $item_num));
+				}
 			}
+			print_r($data['reward']);
 			$quests[] = $data;
 			$quests = json_encode($quests);
-			file_put_contents("quest.json", $quests);
-			print "<script>history.go(-1)</script>";
+			//file_put_contents("quest.json", $quests);
+			//print "<script>history.go(-1)</script>";
 		}
 		else if($category == "dialogue")
 		{
@@ -560,7 +578,7 @@
 					'시작 대사 ID : <input type="text" name="begin_dialogue" id="add_dialogue"><br>'+
 					'진행중 대사 ID : <input type="text" name="progress_dialogue" id="add_dialogue"><br>'+
 					'완료 대사 ID : <input type="text" name="complete_dialogue" id="add_dialogue"><br>'+
-					'보상 : <select name="reward[]" id="quest_reward" multiple><option value="exp">경험치<option value="money">돈</select><div></div><br>');
+					'보상 : <select name="reward[]" id="quest_reward" multiple><option value="exp">경험치<option value="money">돈<option value="item">아이템</select><div></div><br>');
 				}
 				else if(category == "dialogue")
 				{
@@ -679,6 +697,11 @@
 					if(quest_reward[i] == "money")
 					{
 						$(this).next().append("돈 액수 : <input type='number' name='money_amount' value='10'><br>");
+					}
+					if(quest_reward[i] == "item")
+					{
+						$(this).next().append("아이템 ID : <input type='text' name='item_id'><br>");
+						$(this).next().append("아이템 개수 : <input type='text' name='item_num' value='1'><br>");
 					}
 				}
 			});

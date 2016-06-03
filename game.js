@@ -42,7 +42,7 @@ var Npc = function()
 
 	Character.call(this);
 }
-var item_type = {consume:1, equip:2, etc:3};
+var item_type = {consume:0, equip:1, etc:2};
 var Item = function()
 {
 	var id;
@@ -1800,7 +1800,6 @@ var reloadInventory = function(target)
 		inventory = active_unit_inventory;
 		$(".active_unit_inventory > .inventory_list").empty();
 	}
-	inventory = {};
 	$.ajax({
 		url:"item.json",
 		dataType:"json",
@@ -1838,8 +1837,8 @@ mouseenter : function(event)
 	var item_effect = "<li>";
 	item_effect += getEffectInfo({effect:item_effects});
 	var item_slot;
-	if(item_info['type'] == "consume") item_slot = "소모품";
-	else if(item_info['type'] == "etc") item_slot = "기타";
+	if(item_info['type'] == item_type["consume"]) item_slot = "소모품";
+	else if(item_info['type'] == item_type["etc"]) item_slot = "기타";
 	else if(item_info['equip_slot'] == "head")
 	{
 		item_slot = "투구";
@@ -1942,9 +1941,9 @@ var equipItem = function(target, item)
 	if(target == player) item = inventory_item_info[item_id];
 	else item = active_unit_inventory[item_id];
 	var equip_state = 0;
-	var item_type = item['type'];
+	//var item_type = item['type'];
 	var item_effects = [];
-	if(item_type == "equip")
+	if(item['type'] == item_type["equip"])
 	{
 		for(var slot in target.equip_slot)
 		{
@@ -2055,7 +2054,7 @@ var equipItem = function(target, item)
 			else $(".active_unit_inventory .inventory_item#item_"+item_id).removeClass("equipped");
 		}
 	}
-	else if(item_type == "consume")
+	else if(item['type'] == item_type["consume"])
 	{
 		for(var i = 0; i < item['item_effect'].length; i++)
 			item_effects.push(item['item_effect'][i]);
@@ -2084,6 +2083,7 @@ var giveItem = function(target, id, num)
 					inventory_item_info[Object.keys(inventory_item_info).length] = result[id];
 					inventory_item_info[Object.keys(inventory_item_info).length-1]['id'] = id;
 					player.cur_weight += parseInt(result[id]['weight']);
+					console.log(inventory_item_info);
 					addInventory(target, Object.keys(inventory_item_info).length-1);
 				}
 			}

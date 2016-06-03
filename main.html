@@ -446,6 +446,7 @@
 					url:"quest.json",
 					dataType:"json",
 					type:"post",
+					async:false,
 					success:function(result)
 					{
 						quests_info['in_progress_quest'][quest_id] = result[quest_id];
@@ -486,6 +487,13 @@
 					{
 						player.money += parseInt(quests_info['in_progress_quest'][quest_id]['reward'][val]);
 					}
+					else if(val == "item")
+					{
+						for(var i = 0; i < quests_info['in_progress_quest'][quest_id]['reward'][val]['id'].length; i++)
+						{
+							giveItem(player, parseInt(quests_info['in_progress_quest'][quest_id]['reward'][val]['id'][i]), parseInt(quests_info['in_progress_quest'][quest_id]['reward'][val]['num'][i]));
+						}
+					}
 				}
 				reload(player);
 				if(quests_info['complete_quest'][quest_id] === undefined) quests_info['complete_quest'][quest_id] = {};
@@ -502,8 +510,8 @@
 				var quest_info = quests_info[$(this).parents("ul").attr("class")][$(this).attr("id").split("_")[1]];
 				$(".quest_name").text(quest_info['name']);
 				$(".quest_desc").text(quest_info['desc']);
-				//$(".quest_name").text(quest_info['name']);
-				//$(".quest_name").text(quest_info['name']);
+				$(".quest_npc").text(quest_info['name']);
+				$(".quest_reward").text(quest_info['name']);
 			});
 			// SAVE LOAD STARTGAME
 			/*$('#startgamebt').click(function()
@@ -520,6 +528,7 @@
 				reload(player);
 				moveLocation(1);
 				addQuest(0);
+				completeQuest(0);
 				//$("#explore").click();
 				if(active_unit.sp > 0) $(".inc_stat").removeClass("hide");
 				//$("#test").click();
