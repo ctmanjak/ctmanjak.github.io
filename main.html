@@ -222,7 +222,7 @@
 				$.ajax({
 					url:"dialogue.json",
 					dataType:"json",
-					type:"post",
+					type:"get",
 					success:function(result)
 					{
 						cur_dialogue = result[dialogue_id];
@@ -259,7 +259,7 @@
 					$.ajax({
 					url:"quest.json",
 					dataType:"json",
-					type:"post",
+					type:"get",
 					async:false,
 					success:function(result)
 					{
@@ -445,7 +445,7 @@
 				$.ajax({
 					url:"quest.json",
 					dataType:"json",
-					type:"post",
+					type:"get",
 					async:false,
 					success:function(result)
 					{
