@@ -1029,7 +1029,7 @@ $('#load').click(function(event)
 	for(var follower in load_data['follower'])
 	{
 		const temp = new Npc();
-		temp.createRandom();
+		//temp.createRandom();
 		for(var val in load_data['follower'][follower])
 		{
 			if(!load_data['follower'][follower].hasOwnProperty(val)) continue;
@@ -1049,7 +1049,7 @@ $('#load').click(function(event)
 	for(var npc in load_data['npc'])
 	{
 		const temp = new Npc();
-		temp.createRandom();
+		//temp.createRandom();
 		for(var val in load_data['npc'][npc])
 		{
 			if(!load_data['npc'][npc].hasOwnProperty(val)) continue;
@@ -1109,7 +1109,7 @@ $('#explore').click(function(event)
 				$(".select_npc")[0].click();
 			}
 			else cur_state = state['idle'];
-		}, Math.floor(Math.random()*4+1));
+		}, Math.floor(Math.random()*(3000-1000)+1000));
 	}
 });
 $("#main_location").click(function(event)
