@@ -1121,7 +1121,7 @@ var moveLocation = function(id)
 {
 	var npc_id = [];
 	var monster_id = [];
-	var location;
+	var location = {};
 	var check_sub = 0;
 	npcs_info = [];
 	monsters_info = [];
@@ -1144,7 +1144,7 @@ var moveLocation = function(id)
 	$.ajax({
 		url:"location.json",
 		dataType:"json",
-		type:"post",
+		type:"get",
 		async:false,
 		success:function(result)
 		{
@@ -1186,7 +1186,7 @@ var moveLocation = function(id)
 	$.ajax({
 		url:"npc.json",
 		dataType:"json",
-		type:"post",
+		type:"get",
 		async:false,
 		success:function(result)
 		{
@@ -1200,7 +1200,7 @@ var moveLocation = function(id)
 	$.ajax({
 		url:"monster.json",
 		dataType:"json",
-		type:"post",
+		type:"get",
 		async:false,
 		success:function(result)
 		{
@@ -1803,7 +1803,7 @@ var reloadInventory = function(target)
 	$.ajax({
 		url:"item.json",
 		dataType:"json",
-		type:"post",
+		type:"get",
 		async:false,
 		success:function(result)
 		{
@@ -2069,7 +2069,7 @@ var giveItem = function(target, id, num)
 	$.ajax({
 		url:"item.json",
 		dataType:"json",
-		type:"post",
+		type:"get",
 		async:false,
 		success:function(result)
 		{
